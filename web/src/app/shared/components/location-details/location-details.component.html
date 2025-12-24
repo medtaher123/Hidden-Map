@@ -1,0 +1,81 @@
+<div
+  class="fixed inset-0 bg-black z-40 transition-opacity duration-300"
+  [class.opacity-0]="!isOpen"
+  [class.opacity-60]="isOpen"
+  [class.pointer-events-none]="!isOpen"
+  (click)="onClose()"
+></div>
+
+<div
+  class="fixed right-0 top-0 h-full w-full md:w-96 bg-white shadow-xl z-50 transition-transform duration-300 overflow-y-auto"
+  [class.translate-x-full]="!isOpen"
+>
+  <div *ngIf="location" class="flex flex-col h-full">
+    <!-- Header with Close Button -->
+    <div
+      class="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center"
+    >
+      <h2 class="text-xl font-bold text-gray-900">{{ location.name }}</h2>
+      <button
+        (click)="onClose()"
+        class="p-2 hover:bg-gray-100 rounded-full transition"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Photos Placeholder -->
+    <div
+      class="bg-gray-200 h-48 flex items-center justify-center text-gray-500"
+    >
+      <div class="text-center">
+        <span class="text-4xl">📸</span>
+        <p class="mt-2 text-sm">Photos carousel to be implemented</p>
+      </div>
+    </div>
+
+    <!-- Location Content -->
+    <div class="flex-1 p-4 space-y-4">
+      <!-- Category and Location Info -->
+      <div class="flex items-center space-x-2">
+        <span class="text-2xl">{{ categoryInfo?.icon }}</span>
+        <span class="text-sm font-semibold text-gray-600">
+          {{ categoryInfo?.label }}
+        </span>
+      </div>
+
+      <!-- Address -->
+      <div
+        *ngIf="location.address || location.city"
+        class="text-sm text-gray-600"
+      >
+        <p class="flex items-center space-x-2">
+          <span>📍</span>
+          <span
+            >{{ location.address
+            }}{{ location.address && location.city ? ", " : ""
+            }}{{ location.city }}</span
+          >
+        </p>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <h3 class="font-semibold text-gray-900 mb-2">About</h3>
+        <p class="text-sm text-gray-600">{{ location.description }}</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -12,3 +12,25 @@
   position: relative;
   z-index: 0;
 }
+
+/* Custom Marker Styles */
+:host ::ng-deep .custom-marker-icon {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+:host ::ng-deep .custom-marker-icon:hover {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

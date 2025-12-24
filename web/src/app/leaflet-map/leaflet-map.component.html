@@ -9,7 +9,36 @@
 
   <!-- Map Container -->
   <div class="rounded-lg shadow-lg overflow-hidden bg-white relative z-0">
-    <div id="map" class="w-full h-96 md:h-[600px]"></div>
+    <!-- Loading State -->
+    <div
+      *ngIf="isLoading()"
+      class="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-20"
+    >
+      <div class="text-center">
+        <div
+          class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
+        ></div>
+        <p class="mt-4 text-gray-600 font-medium">Loading hidden gems...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div
+      *ngIf="error()"
+      class="absolute inset-0 bg-red-50 flex items-center justify-center z-20"
+    >
+      <div class="text-center">
+        <p class="text-red-600 font-medium">{{ error() }}</p>
+        <button
+          (click)="retry()"
+          class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+
+    <div id="map" class="w-full h-96 md:h-screen"></div>
   </div>
 
   <!-- Map Info -->
@@ -19,7 +48,7 @@
         <span class="text-2xl">📍</span>
         <h3 class="font-semibold text-gray-900">Total Gems</h3>
       </div>
-      <p class="text-3xl font-bold text-blue-600">1,234</p>
+      <p class="text-3xl font-bold text-blue-600">{{ locations.length }}</p>
     </div>
     <div class="p-6 bg-purple-50 rounded-lg border border-purple-200">
       <div class="flex items-center space-x-3 mb-2">
@@ -37,3 +66,10 @@
     </div>
   </div>
 </div>
+
+<!-- Location Details Modal -->
+<app-location-details
+  [location]="selectedLocation"
+  [isOpen]="isDetailsOpen"
+  (close)="closeLocationDetails()"
+></app-location-details>
