@@ -1,0 +1,142 @@
+<nav class="bg-white shadow-md sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <!-- Logo -->
+      <div class="shrink-0 flex items-center">
+        <a routerLink="/" class="flex items-center space-x-2">
+          <div
+            class="bg-linear-to-r from-blue-600 to-purple-600 w-8 h-8 rounded-lg flex items-center justify-center"
+          >
+            <span class="text-white font-bold text-lg">🗺️</span>
+          </div>
+          <span class="text-xl font-bold text-gray-900">HiddenMap</span>
+        </a>
+      </div>
+
+      <!-- Desktop Menu -->
+      <div class="hidden md:flex items-center space-x-1">
+        <a
+          routerLink="/"
+          class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition"
+        >
+          Discover
+        </a>
+        <a
+          routerLink="/submit"
+          class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition"
+        >
+          Submit Gem
+        </a>
+        <a
+          routerLink="/favorites"
+          class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition"
+        >
+          Favorites
+        </a>
+        <a
+          routerLink="/leaderboard"
+          class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition"
+        >
+          Leaderboard
+        </a>
+      </div>
+
+      <!-- Right Section -->
+      <div class="hidden md:flex items-center space-x-4">
+        <button
+          class="px-4 py-2 rounded-md text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 transition"
+        >
+          Login
+        </button>
+        <button
+          class="px-4 py-2 rounded-md text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg transition"
+        >
+          Sign Up
+        </button>
+      </div>
+
+      <!-- Mobile menu button -->
+      <div class="md:hidden">
+        <button
+          (click)="toggleMenu()"
+          class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none transition"
+        >
+          <svg
+            *ngIf="!isMenuOpen()"
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            ></path>
+          </svg>
+          <svg
+            *ngIf="isMenuOpen()"
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div *ngIf="isMenuOpen()" class="md:hidden bg-white border-t border-gray-200">
+    <div class="px-2 pt-2 pb-3 space-y-1">
+      <a
+        routerLink="/"
+        (click)="closeMenu()"
+        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition"
+      >
+        Discover
+      </a>
+      <a
+        routerLink="/submit"
+        (click)="closeMenu()"
+        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition"
+      >
+        Submit Gem
+      </a>
+      <a
+        routerLink="/favorites"
+        (click)="closeMenu()"
+        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition"
+      >
+        Favorites
+      </a>
+      <a
+        routerLink="/leaderboard"
+        (click)="closeMenu()"
+        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition"
+      >
+        Leaderboard
+      </a>
+      <div class="flex flex-col space-y-2 pt-4 border-t border-gray-200">
+        <button
+          class="w-full px-4 py-2 rounded-md text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 transition"
+        >
+          Login
+        </button>
+        <button
+          class="w-full px-4 py-2 rounded-md text-sm font-medium text-white bg-linear-to-r from-blue-600 to-purple-600 hover:shadow-lg transition"
+        >
+          Sign Up
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
