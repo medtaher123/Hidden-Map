@@ -17,9 +17,11 @@ import {
 import { LocationsService } from '../service/locations.service';
 import { CreateLocationDto } from '../dto/create-location.dto';
 import { UpdateLocationDto } from '../dto/update-location.dto';
+import { Public } from '../../auth/decorators/public.decorator';
 
 @ApiTags('Locations')
 @ApiBearerAuth('JWT-auth')
+@Public()
 @Controller('locations')
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}

@@ -6,6 +6,9 @@ export class User extends TimestampEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column()
+  name: string;
+
   @Column({ unique: true })
   email: string;
 
