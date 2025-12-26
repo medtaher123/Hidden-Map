@@ -193,6 +193,7 @@ async function seed(configService: ConfigService) {
       email: 'test@example.com',
       avatarUrl: 'https://i.pravatar.cc/150?img=1',
       bio: 'Test user for development',
+      password: 'testpassword',
     });
     await userRepository.save(testUser);
     console.log('✓ Created test user');
@@ -203,6 +204,7 @@ async function seed(configService: ConfigService) {
       email: 'explorer@example.com',
       avatarUrl: 'https://i.pravatar.cc/150?img=2',
       bio: 'Love discovering hidden gems!',
+      password: 'explorerpassword',
     });
     await userRepository.save(user2);
 
@@ -211,6 +213,7 @@ async function seed(configService: ConfigService) {
       email: 'foodie@example.com',
       avatarUrl: 'https://i.pravatar.cc/150?img=3',
       bio: 'Food enthusiast and cafe hopper',
+      password: 'foodiepassword',
     });
     await userRepository.save(user3);
     console.log('✓ Created additional test users');
