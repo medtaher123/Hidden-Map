@@ -17,4 +17,21 @@ export const API_ROUTES = {
   locations: {
     base: `${API_BASE}/locations`,
   },
+
+  favorites: {
+    base: `${API_BASE}/favorites`,
+    byLocation: (locationId: string) => `${API_BASE}/locations/${locationId}/favorite`,
+    check: (locationId: string) => `${API_BASE}/locations/${locationId}/favorite/check`,
+  },
+
+  ratings: {
+    byLocation: (locationId: string) => `${API_BASE}/locations/${locationId}/ratings`,
+    average: (locationId: string) => `${API_BASE}/locations/${locationId}/ratings/average`,
+  },
+
+  comments: {
+    byLocation: (locationId: string) => `${API_BASE}/locations/${locationId}/comments`,
+    byId: (locationId: string, commentId: string) =>
+      `${API_BASE}/locations/${locationId}/comments/${commentId}`,
+  },
 } as const;

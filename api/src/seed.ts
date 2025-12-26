@@ -7,6 +7,7 @@ import { Comment } from '../src/comments/entities/comment.entity';
 import { Rating } from '../src/ratings/entities/rating.entity';
 import { Favorite } from '../src/favorites/entities/favorite.entity';
 import { NestFactory } from '@nestjs/core';
+import * as bcrypt from 'bcrypt';
 
 const mockLocations = [
   {
@@ -184,6 +185,7 @@ async function seed(configService: ConfigService) {
     await dataSource.createQueryBuilder().delete().from(Favorite).execute();
     await dataSource.createQueryBuilder().delete().from(Photo).execute();
     await dataSource.createQueryBuilder().delete().from(Location).execute();
+    await dataSource.createQueryBuilder().delete().from(User).execute();
     console.log('Cleared existing data');
 
     // Create test user with specific UUID
@@ -193,7 +195,7 @@ async function seed(configService: ConfigService) {
       email: 'test@example.com',
       avatarUrl: 'https://i.pravatar.cc/150?img=1',
       bio: 'Test user for development',
-      password: 'testpassword',
+      password: await bcrypt.hash('testpassword', 10),
     });
     await userRepository.save(testUser);
     console.log('✓ Created test user');
@@ -204,7 +206,7 @@ async function seed(configService: ConfigService) {
       email: 'explorer@example.com',
       avatarUrl: 'https://i.pravatar.cc/150?img=2',
       bio: 'Love discovering hidden gems!',
-      password: 'explorerpassword',
+      password: await bcrypt.hash('explorerpassword', 10),
     });
     await userRepository.save(user2);
 
@@ -213,7 +215,7 @@ async function seed(configService: ConfigService) {
       email: 'foodie@example.com',
       avatarUrl: 'https://i.pravatar.cc/150?img=3',
       bio: 'Food enthusiast and cafe hopper',
-      password: 'foodiepassword',
+      password: await bcrypt.hash('foodiepassword', 10),
     });
     await userRepository.save(user3);
     console.log('✓ Created additional test users');

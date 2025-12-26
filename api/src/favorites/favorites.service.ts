@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Favorite } from './entities/favorite.entity';
-import { CreateFavoriteDto } from './dto/create-favorite.dto';
 
 @Injectable()
 export class FavoritesService {
@@ -11,10 +10,10 @@ export class FavoritesService {
     private readonly favoriteRepository: Repository<Favorite>,
   ) {}
 
-  async create(createFavoriteDto: CreateFavoriteDto): Promise<Favorite> {
+  async create(userId: string, locationId: string): Promise<Favorite> {
     const favorite = this.favoriteRepository.create({
-      user: { id: createFavoriteDto.userId },
-      location: { id: createFavoriteDto.locationId },
+      user: { id: userId },
+      location: { id: locationId },
     });
     return this.favoriteRepository.save(favorite);
   }

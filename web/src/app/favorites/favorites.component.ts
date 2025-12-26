@@ -1,13 +1,11 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LocationsService } from '../shared/services/locations.service';
+import { Router } from '@angular/router';
 import { FavoritesService } from '../shared/services/favorites.service';
+import { AuthService } from '../auth/services/auth.service';
 import { Location, LOCATION_CATEGORIES } from '../shared/models/location.model';
 import { LocationDetailsComponent } from '../discover/location-details/location-details.component';
 import { Subject, takeUntil, catchError, of } from 'rxjs';
-
-// Mock current user ID - in a real app, this would come from auth service
-const CURRENT_USER_ID = '759df37d-7d4e-457d-989d-1d2fb4ad8476';
 
 @Component({
   selector: 'app-favorites',
@@ -16,18 +14,24 @@ const CURRENT_USER_ID = '759df37d-7d4e-457d-989d-1d2fb4ad8476';
   styleUrl: './favorites.component.css',
 })
 export class FavoritesComponent implements OnInit, OnDestroy {
-  private locationsService = inject(LocationsService);
   private favoritesService = inject(FavoritesService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
   private destroy$ = new Subject<void>();
 
   favoriteLocations = signal<Location[]>([]);
   isLoading = signal(true);
   error = signal<string | null>(null);
-  
+
   isDetailsOpen = false;
   selectedLocation: Location | null = null;
 
   ngOnInit() {
+    // Check if user is authenticated
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
     this.loadFavorites();
   }
 
@@ -41,7 +45,7 @@ export class FavoritesComponent implements OnInit, OnDestroy {
     this.error.set(null);
 
     // Get user's favorite locations directly from the API
-    this.favoritesService.getUserFavorites(CURRENT_USER_ID)
+    this.favoritesService.getUserFavorites()
       .pipe(
         takeUntil(this.destroy$),
         catchError(err => {

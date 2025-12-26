@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Rating } from './entities/rating.entity';
-import { CreateRatingDto } from './dto/create-rating.dto';
 
 @Injectable()
 export class RatingsService {
@@ -11,28 +10,28 @@ export class RatingsService {
     private readonly ratingRepository: Repository<Rating>,
   ) {}
 
-  async create(createRatingDto: CreateRatingDto): Promise<Rating> {
+  async create(userId: string, locationId: string, rating: number): Promise<Rating> {
     // Check if user already rated this location
     const existing = await this.ratingRepository.findOne({
       where: {
-        user: { id: createRatingDto.userId },
-        location: { id: createRatingDto.locationId },
+        user: { id: userId },
+        location: { id: locationId },
       },
     });
 
     if (existing) {
       // Update existing rating
-      existing.rating = createRatingDto.rating;
+      existing.rating = rating;
       return this.ratingRepository.save(existing);
     }
 
     // Create new rating
-    const rating = this.ratingRepository.create({
-      rating: createRatingDto.rating,
-      user: { id: createRatingDto.userId },
-      location: { id: createRatingDto.locationId },
+    const newRating = this.ratingRepository.create({
+      rating,
+      user: { id: userId },
+      location: { id: locationId },
     });
-    return this.ratingRepository.save(rating);
+    return this.ratingRepository.save(newRating);
   }
 
   async getAverageRating(locationId: string): Promise<number> {

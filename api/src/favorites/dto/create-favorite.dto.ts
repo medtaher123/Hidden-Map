@@ -1,12 +1,3 @@
-import { IsNotEmpty, IsUUID } from 'class-validator';
-
-export class CreateFavoriteDto {
-  @IsUUID()
-  @IsNotEmpty()
-  userId: string;
-
-  @IsUUID()
-  @IsNotEmpty()
-  locationId: string;
-}
+// DTO is not needed since we get userId from @CurrentUser() and locationId from route params
+export class CreateFavoriteDto {}
 

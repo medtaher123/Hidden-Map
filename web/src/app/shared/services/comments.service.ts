@@ -10,11 +10,9 @@ export class CommentsService {
   private apiUrl = 'http://localhost:3000';
   private http = inject(HttpClient);
 
-  addComment(locationId: string, userId: string, commentText: string): Observable<Comment> {
+  addComment(locationId: string, commentText: string): Observable<Comment> {
     return this.http.post<Comment>(`${this.apiUrl}/locations/${locationId}/comments`, {
-      userId,
       commentText,
-      locationId,
     });
   }
 

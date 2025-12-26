@@ -10,11 +10,9 @@ export class RatingsService {
   private apiUrl = 'http://localhost:3000';
   private http = inject(HttpClient);
 
-  rateLocation(locationId: string, userId: string, rating: number): Observable<Rating> {
+  rateLocation(locationId: string, rating: number): Observable<Rating> {
     return this.http.post<Rating>(`${this.apiUrl}/locations/${locationId}/ratings`, {
-      userId,
       rating,
-      locationId,
     });
   }
 

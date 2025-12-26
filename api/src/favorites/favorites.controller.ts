@@ -1,6 +1,7 @@
-import { Controller, Post, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Post, Delete, Param, Get } from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
-import { CreateFavoriteDto } from './dto/create-favorite.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '../users/entities/user.entity';
 
 @Controller()
 export class FavoritesController {
@@ -9,33 +10,30 @@ export class FavoritesController {
   @Post('locations/:locationId/favorite')
   addFavorite(
     @Param('locationId') locationId: string,
-    @Body() createFavoriteDto: CreateFavoriteDto,
+    @CurrentUser() user: User,
   ) {
-    return this.favoritesService.create({
-      ...createFavoriteDto,
-      locationId,
-    });
+    return this.favoritesService.create(user.id, locationId);
   }
 
   @Delete('locations/:locationId/favorite')
   removeFavorite(
     @Param('locationId') locationId: string,
-    @Body() body: { userId: string },
+    @CurrentUser() user: User,
   ) {
-    return this.favoritesService.remove(body.userId, locationId);
+    return this.favoritesService.remove(user.id, locationId);
   }
 
-  @Post('locations/:locationId/favorite/check')
+  @Get('locations/:locationId/favorite/check')
   checkFavorite(
     @Param('locationId') locationId: string,
-    @Body() body: { userId: string },
+    @CurrentUser() user: User,
   ) {
-    return this.favoritesService.isFavorite(body.userId, locationId);
+    return this.favoritesService.isFavorite(user.id, locationId);
   }
 
-  @Post('favorites')
-  getUserFavorites(@Body() body: { userId: string }) {
-    return this.favoritesService.getFavoritesByUser(body.userId);
+  @Get('favorites')
+  getUserFavorites(@CurrentUser() user: User) {
+    return this.favoritesService.getFavoritesByUser(user.id);
   }
 }
 

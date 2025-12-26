@@ -4,10 +4,8 @@ import { Location, Comment, Rating, LOCATION_CATEGORIES } from '../../shared/mod
 import { RatingsService } from '../../shared/services/ratings.service';
 import { CommentsService } from '../../shared/services/comments.service';
 import { FavoritesService } from '../../shared/services/favorites.service';
+import { AuthService } from '../../auth/services/auth.service';
 import { Subject, takeUntil, catchError, of, forkJoin } from 'rxjs';
-
-// Mock current user ID - in a real app, this would come from auth service
-const CURRENT_USER_ID = '759df37d-7d4e-457d-989d-1d2fb4ad8476';
 
 @Component({
   selector: 'app-location-details',
@@ -24,6 +22,7 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   private ratingsService = inject(RatingsService);
   private commentsService = inject(CommentsService);
   private favoritesService = inject(FavoritesService);
+  private authService = inject(AuthService);
   private destroy$ = new Subject<void>();
 
   // Signals for reactive state
@@ -37,8 +36,19 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   isLoadingRatings = signal(false);
   isSubmittingComment = signal(false);
   isTogglingFavorite = signal(false);
+  currentUserId = signal<string | null>(null);
 
   ngOnInit() {
+    // Load current user profile to get user ID
+    this.authService.getProfile().pipe(
+      takeUntil(this.destroy$),
+      catchError(() => of(null))
+    ).subscribe(profile => {
+      if (profile) {
+        this.currentUserId.set(profile.id);
+      }
+    });
+
     if (this.location) {
       this.loadLocationData();
     }
@@ -78,18 +88,21 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
           return of([]);
         })
       ),
-      isFavorite: this.favoritesService.isFavorite(locationId, CURRENT_USER_ID).pipe(
-        catchError(err => {
-          console.error('Error checking favorite status:', err);
-          return of(false);
-        })
-      )
+      isFavorite: this.authService.isAuthenticated()
+        ? this.favoritesService.isFavorite(locationId).pipe(
+            catchError(err => {
+              console.error('Error checking favorite status:', err);
+              return of(false);
+            })
+          )
+        : of(false)
     })
     .pipe(takeUntil(this.destroy$))
     .subscribe({
       next: ({ ratings, comments, isFavorite }) => {
         this.ratings.set(ratings);
-        const userRatingObj = ratings.find(r => r.user.id === CURRENT_USER_ID);
+        const userId = this.currentUserId();
+        const userRatingObj = userId ? ratings.find(r => r.user.id === userId) : null;
         this.userRating.set(userRatingObj?.rating || 0);
         this.isLoadingRatings.set(false);
 
@@ -139,12 +152,12 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   rateLocation(rating: number) {
-    if (!this.location || this.isLoadingRatings()) return;
+    if (!this.location || this.isLoadingRatings() || !this.authService.isAuthenticated()) return;
 
     const locationId = this.location.id;
     this.isLoadingRatings.set(true);
 
-    this.ratingsService.rateLocation(locationId, CURRENT_USER_ID, rating)
+    this.ratingsService.rateLocation(locationId, rating)
       .pipe(
         takeUntil(this.destroy$),
         catchError(err => {
@@ -172,13 +185,13 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   submitComment() {
-    if (!this.location || !this.newComment().trim() || this.isSubmittingComment()) return;
+    if (!this.location || !this.newComment().trim() || this.isSubmittingComment() || !this.authService.isAuthenticated()) return;
 
     const locationId = this.location.id;
     const commentText = this.newComment().trim();
     this.isSubmittingComment.set(true);
 
-    this.commentsService.addComment(locationId, CURRENT_USER_ID, commentText)
+    this.commentsService.addComment(locationId, commentText)
       .pipe(
         takeUntil(this.destroy$),
         catchError(err => {
@@ -197,15 +210,15 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   toggleFavorite() {
-    if (!this.location || this.isTogglingFavorite()) return;
+    if (!this.location || this.isTogglingFavorite() || !this.authService.isAuthenticated()) return;
 
     const locationId = this.location.id;
     const isFav = this.favoriteStatus();
     this.isTogglingFavorite.set(true);
 
     const operation$ = isFav
-      ? this.favoritesService.removeFavorite(locationId, CURRENT_USER_ID)
-      : this.favoritesService.addFavorite(locationId, CURRENT_USER_ID);
+      ? this.favoritesService.removeFavorite(locationId)
+      : this.favoritesService.addFavorite(locationId);
 
     operation$
       .pipe(

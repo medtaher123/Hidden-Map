@@ -17,25 +17,20 @@ export class FavoritesService {
   private apiUrl = 'http://localhost:3000';
   private http = inject(HttpClient);
 
-  addFavorite(locationId: string, userId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/locations/${locationId}/favorite`, {
-      userId,
-      locationId,
-    });
+  addFavorite(locationId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/locations/${locationId}/favorite`, {});
   }
 
-  removeFavorite(locationId: string, userId: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/locations/${locationId}/favorite`, {
-      body: { userId },
-    });
+  removeFavorite(locationId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/locations/${locationId}/favorite`);
   }
 
-  isFavorite(locationId: string, userId: string): Observable<boolean> {
-    return this.http.post<boolean>(`${this.apiUrl}/locations/${locationId}/favorite/check`, { userId });
+  isFavorite(locationId: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/locations/${locationId}/favorite/check`);
   }
 
-  getUserFavorites(userId: string): Observable<Location[]> {
-    return this.http.post<Favorite[]>(`${this.apiUrl}/favorites`, { userId }).pipe(
+  getUserFavorites(): Observable<Location[]> {
+    return this.http.get<Favorite[]>(`${this.apiUrl}/favorites`).pipe(
       map(favorites => favorites.map(fav => fav.location))
     );
   }
