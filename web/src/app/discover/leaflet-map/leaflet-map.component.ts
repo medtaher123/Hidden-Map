@@ -138,4 +138,9 @@ export class LeafletMapComponent implements AfterViewInit {
       this.selectedLocation = null;
     }, 300);
   }
+
+  onFavoriteChanged(event: { locationId: string; isFavorite: boolean }) {
+    // Optional: You could update the marker appearance or show a notification
+    console.log('Favorite status changed:', event);
+  }
 }

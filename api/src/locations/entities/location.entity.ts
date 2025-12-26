@@ -1,6 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { TimestampEntity } from '../../shared/entities/timestamp.entity';
 import { Photo } from './photo.entity';
+import { Rating } from '../../ratings/entities/rating.entity';
+import { Comment } from '../../comments/entities/comment.entity';
+import { Favorite } from '../../favorites/entities/favorite.entity';
 
 @Entity('locations')
 export class Location extends TimestampEntity {
@@ -30,4 +33,13 @@ export class Location extends TimestampEntity {
 
   @OneToMany(() => Photo, (photo) => photo.location, { cascade: true })
   photos: Photo[];
+
+  @OneToMany(() => Rating, (rating) => rating.location)
+  ratings: Rating[];
+
+  @OneToMany(() => Comment, (comment) => comment.location)
+  comments: Comment[];
+
+  @OneToMany(() => Favorite, (favorite) => favorite.location)
+  favorites: Favorite[];
 }

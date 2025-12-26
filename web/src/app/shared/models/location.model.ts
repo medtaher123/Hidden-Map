@@ -2,6 +2,29 @@ export interface Photo {
   id: string;
   url: string;
   thumbnailUrl?: string;
+  caption?: string;
+}
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  avatarUrl?: string;
+  bio?: string;
+}
+
+export interface Rating {
+  id: string;
+  rating: number;
+  user: User;
+  createdAt: Date;
+}
+
+export interface Comment {
+  id: string;
+  commentText: string;
+  user: User;
+  createdAt: Date;
 }
 
 export interface Location {
@@ -14,6 +37,10 @@ export interface Location {
   address?: string;
   city?: string;
   photos: Photo[];
+  ratings?: Rating[];
+  comments?: Comment[];
+  averageRating?: number;
+  isFavorite?: boolean;
 }
 
 export interface LocationsResponse {

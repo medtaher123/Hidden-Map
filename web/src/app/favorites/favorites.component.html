@@ -1,0 +1,108 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">My Favorites</h1>
+    <p class="text-gray-600">
+      Your collection of favorite hidden gems
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="flex items-center justify-center py-20">
+    <div class="text-center">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <p class="mt-4 text-gray-600 font-medium">Loading your favorites...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error()" class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+    <p class="text-red-600 font-medium">{{ error() }}</p>
+    <button
+      (click)="retry()"
+      class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+    >
+      Try Again
+    </button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading() && !error() && favoriteLocations().length === 0" 
+       class="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
+    <span class="text-6xl mb-4 block">❤️</span>
+    <h3 class="text-xl font-semibold text-gray-900 mb-2">No favorites yet</h3>
+    <p class="text-gray-600 mb-6">Start exploring and add locations to your favorites!</p>
+    <a href="/" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+      Discover Locations
+    </a>
+  </div>
+
+  <!-- Favorites Grid -->
+  <div *ngIf="!isLoading() && !error() && favoriteLocations().length > 0" 
+       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    @for (location of favoriteLocations(); track location.id) {
+      <div 
+        (click)="openLocationDetails(location)"
+        class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition cursor-pointer group"
+      >
+        <!-- Image -->
+        <div class="relative h-48 bg-gray-200">
+          @if (location.photos && location.photos.length > 0) {
+            <img
+              [src]="location.photos[0].url"
+              [alt]="location.name"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+            />
+          } @else {
+            <div class="flex items-center justify-center h-full text-gray-400">
+              <span class="text-5xl">📸</span>
+            </div>
+          }
+          
+          <!-- Category Badge -->
+          <div 
+            class="absolute top-3 right-3 px-3 py-1 rounded-full text-white text-sm font-semibold shadow-lg flex items-center space-x-1"
+            [style.background-color]="getCategoryInfo(location.category).color"
+          >
+            <span>{{ getCategoryInfo(location.category).icon }}</span>
+            <span>{{ getCategoryInfo(location.category).label }}</span>
+          </div>
+
+          <!-- Favorite Badge -->
+          <div class="absolute top-3 left-3 bg-red-500 text-white p-2 rounded-full shadow-lg">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+              <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-4">
+          <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition">
+            {{ location.name }}
+          </h3>
+          
+          <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+            {{ location.description }}
+          </p>
+
+          @if (location.address || location.city) {
+            <div class="flex items-center text-sm text-gray-500">
+              <span class="mr-1">📍</span>
+              <span>{{ location.address }}{{ location.address && location.city ? ', ' : '' }}{{ location.city }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Location Details Modal -->
+<app-location-details
+  [location]="selectedLocation"
+  [isOpen]="isDetailsOpen"
+  (close)="closeLocationDetails()"
+  (favoriteChanged)="onFavoriteChanged($event)"
+></app-location-details>
+
