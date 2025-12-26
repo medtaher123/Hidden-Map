@@ -1,7 +1,8 @@
 import { DataSource } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Location } from '../src/locations/entities/location.entity';
 import { Photo } from '../src/locations/entities/photo.entity';
+import { NestFactory } from '@nestjs/core';
 
 const mockLocations = [
   {
@@ -150,9 +151,7 @@ const mockLocations = [
   },
 ];
 
-async function seed() {
-  const configService = new ConfigService();
-
+async function seed(configService: ConfigService) {
   const dataSource = new DataSource({
     type: 'postgres',
     host: configService.get<string>('DB_HOST') || 'localhost',
@@ -194,7 +193,7 @@ async function seed() {
       console.log(`✓ Added location: ${location.name}`);
     }
 
-    console.log('\n Seeding completed successfully!');
+    console.log('\nSeeding completed successfully!');
     console.log(`Added ${mockLocations.length} locations with photos`);
   } catch (error) {
     console.error('Error during seeding:', error);
@@ -203,4 +202,15 @@ async function seed() {
   }
 }
 
-seed().catch(console.error);
+async function bootstrap() {
+  const appContext = await NestFactory.createApplicationContext(
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+  );
+  const config = appContext.get(ConfigService);
+  await seed(config);
+}
+
+bootstrap();
