@@ -4,12 +4,13 @@ import { Location } from '../models/location.model';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { retry, catchError } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
+import { API_ROUTES } from '../../config/api-routes.config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LocationsService {
-  private apiUrl = 'http://localhost:3000/locations';
+  private apiUrl = API_ROUTES.locations.base;
   private http = inject(HttpClient);
   private retryCount = signal(0);
 

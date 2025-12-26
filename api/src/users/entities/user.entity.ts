@@ -5,14 +5,14 @@ import { Comment } from '../../comments/entities/comment.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
 import { Follower } from '../../followers/entities/follower.entity';
 
+
+
 @Entity('users')
 export class User extends TimestampEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column({ unique: true })
-  username: string;
-
+  @Column()
+  name: string;
   @Column({ unique: true })
   email: string;
 
@@ -21,6 +21,12 @@ export class User extends TimestampEntity {
 
   @Column({ nullable: true })
   bio: string;
+
+  @Column()
+  password: string;
+
+  @Column({ default: true })
+  isActive: boolean;
 
   @OneToMany(() => Rating, (rating) => rating.user)
   ratings: Rating[];

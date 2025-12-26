@@ -21,7 +21,7 @@
           </li>
           <li>
             <a
-              routerLink="/submit"
+              [routerLink]="APP_ROUTES.app.submit"
               class="hover:text-blue-400 transition text-sm"
             >
               Submit a Gem
@@ -29,7 +29,7 @@
           </li>
           <li>
             <a
-              routerLink="/favorites"
+              [routerLink]="APP_ROUTES.app.favorites"
               class="hover:text-blue-400 transition text-sm"
             >
               My Favorites
@@ -37,7 +37,7 @@
           </li>
           <li>
             <a
-              routerLink="/leaderboard"
+              [routerLink]="APP_ROUTES.app.leaderboard"
               class="hover:text-blue-400 transition text-sm"
             >
               Leaderboard

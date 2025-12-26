@@ -9,6 +9,7 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { LocationsService } from '../shared/services/locations.service';
 import { LOCATION_CATEGORIES } from '../shared/models/location.model';
+import { API_ROUTES } from '../config/api-routes.config';
 
 @Component({
   selector: 'app-submit',
@@ -79,7 +80,7 @@ export class SubmitComponent {
       ],
     };
 
-    this.http.post('http://localhost:3000/locations', payload).subscribe({
+    this.http.post(API_ROUTES.locations.base, payload).subscribe({
       next: () => {
         this.scrollToTop();
         this.submitted.set(true);

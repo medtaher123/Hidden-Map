@@ -189,7 +189,7 @@ async function seed(configService: ConfigService) {
     // Create test user with specific UUID
     const testUser = userRepository.create({
       id: '00000000-0000-0000-0000-000000000001',
-      username: 'testuser',
+      name: 'testuser',
       email: 'test@example.com',
       avatarUrl: 'https://i.pravatar.cc/150?img=1',
       bio: 'Test user for development',
@@ -199,7 +199,7 @@ async function seed(configService: ConfigService) {
 
     // Create additional test users
     const user2 = userRepository.create({
-      username: 'explorer',
+      name: 'explorer',
       email: 'explorer@example.com',
       avatarUrl: 'https://i.pravatar.cc/150?img=2',
       bio: 'Love discovering hidden gems!',
@@ -207,7 +207,7 @@ async function seed(configService: ConfigService) {
     await userRepository.save(user2);
 
     const user3 = userRepository.create({
-      username: 'foodie',
+      name: 'foodie',
       email: 'foodie@example.com',
       avatarUrl: 'https://i.pravatar.cc/150?img=3',
       bio: 'Food enthusiast and cafe hopper',

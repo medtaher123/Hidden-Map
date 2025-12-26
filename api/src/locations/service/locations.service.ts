@@ -9,30 +9,30 @@ import { UpdateLocationDto } from '../dto/update-location.dto';
 export class LocationsService {
   constructor(
     @InjectRepository(Location)
-    private readonly locationRepsitory: Repository<Location>,
+    private readonly locationRepository: Repository<Location>,
   ) {}
 
   findAll(): Promise<Location[]> {
-    return this.locationRepsitory.find({ relations: ['photos'] });
+    return this.locationRepository.find({ relations: ['photos'] });
   }
 
   findOne(id: string): Promise<Location | null> {
-    return this.locationRepsitory.findOne({
+    return this.locationRepository.findOne({
       where: { id },
       relations: ['photos'],
     });
   }
 
   create(locationData: CreateLocationDto): Promise<Location> {
-    const location = this.locationRepsitory.create(locationData);
-    return this.locationRepsitory.save(location);
+    const location = this.locationRepository.create(locationData);
+    return this.locationRepository.save(location);
   }
 
   update(id: string, locationData: UpdateLocationDto): Promise<Location> {
-    return this.locationRepsitory.save({ id, ...locationData });
+    return this.locationRepository.save({ id, ...locationData });
   }
 
   async remove(id: string): Promise<void> {
-    await this.locationRepsitory.softDelete(id);
+    await this.locationRepository.softDelete(id);
   }
 }
