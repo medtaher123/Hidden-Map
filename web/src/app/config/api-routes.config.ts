@@ -34,4 +34,14 @@ export const API_ROUTES = {
     byId: (locationId: string, commentId: string) =>
       `${API_BASE}/locations/${locationId}/comments/${commentId}`,
   },
+
+  admin: {
+    pendingLocations: `${API_BASE}/admin/pending-locations`,
+    approveLocation: (id: string) => `${API_BASE}/admin/approve-location/${id}`,
+    rejectLocation: (id: string) => `${API_BASE}/admin/reject-location/${id}`,
+  },
+
+  leaderboard: {
+    base: `${API_BASE}/leaderboard`,
+  },
 } as const;

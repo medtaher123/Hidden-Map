@@ -5,6 +5,12 @@ import { Rating } from '../../ratings/entities/rating.entity';
 import { Comment } from '../../comments/entities/comment.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
 
+export enum LocationStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+}
+
 @Entity('locations')
 export class Location extends TimestampEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -30,6 +36,13 @@ export class Location extends TimestampEntity {
 
   @Column({ nullable: true })
   city: string;
+
+  @Column({
+    type: 'enum',
+    enum: LocationStatus,
+    default: LocationStatus.PENDING,
+  })
+  status: LocationStatus;
 
   @OneToMany(() => Photo, (photo) => photo.location, { cascade: true })
   photos: Photo[];

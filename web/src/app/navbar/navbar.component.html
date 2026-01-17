@@ -39,6 +39,15 @@
         >
           Leaderboard
         </a>
+        @if (user()?.role === 'ADMIN') {
+        <a
+          routerLink="/admin/pending-locations"
+          routerLinkActive="text-blue-600 bg-blue-50"
+          class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition"
+        >
+          Admin
+        </a>
+        }
       </div>
 
       <!-- Right Section -->
@@ -147,6 +156,16 @@
       >
         Leaderboard
       </a>
+      @if (user()?.role === 'ADMIN') {
+      <a
+        routerLink="/admin/pending-locations"
+        routerLinkActive="text-blue-600 bg-blue-50"
+        (click)="closeMenu()"
+        class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition"
+      >
+        Admin
+      </a>
+      }
       <div class="flex flex-col space-y-2 pt-4 border-t border-gray-200">
         @if (!authService.isAuthenticated()) {
         <a

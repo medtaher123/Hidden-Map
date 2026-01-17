@@ -1,3 +1,49 @@
-<div>
-  <h1>Pending Locations</h1>
+<div class="p-6">
+  <h1 class="text-2xl font-bold mb-4">Pending Locations</h1>
+
+  @if (loading()) {
+    <p>Loading...</p>
+  }
+
+  @else {
+    @if (pendingLocations().length === 0) {
+      <p>No pending locations.</p>
+    }
+
+    @else {
+      <table class="w-full border">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="p-2">Title</th>
+            <th class="p-2">User</th>
+            <th class="p-2">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (loc of pendingLocations(); track loc.id) {
+            <tr class="border-t">
+              <td class="p-2">{{ loc.title }}</td>
+              <td class="p-2">{{ loc.submittedBy.username }}</td>
+              <td class="p-2 flex gap-2">
+                <button
+                  class="bg-green-500 text-white px-3 py-1 rounded"
+                  (click)="approve(loc.id)"
+                >
+                  Approve
+                </button>
+
+                <button
+                  class="bg-red-500 text-white px-3 py-1 rounded"
+                  (click)="reject(loc.id)"
+                >
+                  Reject
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
 </div>

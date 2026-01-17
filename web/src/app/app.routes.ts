@@ -7,6 +7,18 @@ import { authRoutes } from './auth/routes';
 export const routes: Routes = [
   { path: '', component: LeafletMapComponent },
   { path: 'submit', component: SubmitComponent },
+  {
+  path: 'admin',
+  loadChildren: () =>
+    import('./admin/admin.routes').then(m => m.ADMIN_ROUTES),
+  },
+  {
+  path: 'leaderboard',
+  loadChildren: () =>
+    import('./leaderboard/leaderboard.routes')
+      .then(m => m.LEADERBOARD_ROUTES),
+}
+,
   { path: 'favorites', component: FavoritesComponent },
   ...authRoutes,
 ];

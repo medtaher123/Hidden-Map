@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   Router,
@@ -16,13 +16,24 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   readonly APP_ROUTES = APP_ROUTES;
   authService = inject(AuthService);
   private router = inject(Router);
   private toastr = inject(ToastrService);
 
   isMenuOpen = signal(false);
+  user = this.authService.getUserProfile();
+
+  ngOnInit() {
+    if (this.authService.isAuthenticated()) {
+      this.authService.fetchAndStoreProfile().subscribe({
+        error: (err) => {
+          console.error('Failed to fetch profile:', err);
+        },
+      });
+    }
+  }
 
   toggleMenu() {
     this.isMenuOpen.set(!this.isMenuOpen());

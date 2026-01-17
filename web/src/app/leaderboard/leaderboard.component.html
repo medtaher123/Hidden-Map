@@ -1,0 +1,48 @@
+<div>
+  <h1>Leaderboard</h1>
+</div>
+<div class="max-w-4xl mx-auto p-6">
+
+  <h1 class="text-2xl font-bold mb-6">🏆 Leaderboard</h1>
+
+  @if (loading()) {
+    <p class="text-gray-500">Loading leaderboard...</p>
+  }
+
+  @if (!loading()) {
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow">
+
+      <div class="grid grid-cols-4 font-semibold border-b p-4">
+        <span>#</span>
+        <span>User</span>
+        <span>Points</span>
+        <span></span>
+      </div>
+
+      @for (user of users(); track user.id) {
+        <div
+          class="grid grid-cols-4 items-center p-4 border-b"
+          [class.bg-blue-50]="isCurrentUser(user)"
+          [class.dark:bg-blue-900]="isCurrentUser(user)"
+        >
+          <span class="font-bold">{{ user.rank }}</span>
+
+          <span class="flex items-center gap-2">
+            <img
+              *ngIf="user.avatarUrl"
+              [src]="user.avatarUrl"
+              class="w-8 h-8 rounded-full"
+            />
+            {{ user.username }}
+          </span>
+
+          <span class="font-semibold">{{ user.points }}</span>
+
+          @if (isCurrentUser(user)) {
+            <span class="text-blue-600 font-semibold">You</span>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
