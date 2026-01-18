@@ -44,4 +44,9 @@ export const API_ROUTES = {
   leaderboard: {
     base: `${API_BASE}/leaderboard`,
   },
+
+  notifications: {
+    base: `${API_BASE}/notifications`,
+    markAsRead: (id: string) => `${API_BASE}/notifications/${id}/read`,
+  },
 } as const;

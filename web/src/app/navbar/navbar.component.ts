@@ -9,10 +9,12 @@ import {
 import { APP_ROUTES } from '../config/app-routes.config';
 import { AuthService } from '../auth/services/auth.service';
 import { ToastrService } from 'ngx-toastr';
+import { NotificationsService } from '../shared/services/notifications.service';
+import { NotificationsDropdownComponent } from '../notifications/notifications-dropdown/notifications-dropdown.component';
 
 @Component({
   selector: 'app-navbar',
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterLinkWithHref],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterLinkWithHref, NotificationsDropdownComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
@@ -21,9 +23,14 @@ export class NavbarComponent implements OnInit {
   authService = inject(AuthService);
   private router = inject(Router);
   private toastr = inject(ToastrService);
+  private notificationsService = inject(NotificationsService);
 
   isMenuOpen = signal(false);
   user = this.authService.getUserProfile();
+  
+  // Expose notification signals to template
+  unreadCount = this.notificationsService.unreadCount;
+  hasUnread = this.notificationsService.hasUnread;
 
   ngOnInit() {
     if (this.authService.isAuthenticated()) {
@@ -32,6 +39,9 @@ export class NavbarComponent implements OnInit {
           console.error('Failed to fetch profile:', err);
         },
       });
+      
+      // Load notifications
+      this.notificationsService.getNotifications().subscribe();
     }
   }
 
