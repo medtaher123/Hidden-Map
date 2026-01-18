@@ -5,6 +5,7 @@ import { UserProfileDto } from '../dto/user-profile.dto';
 import { HttpClient } from '@angular/common/http';
 
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { API_ROUTES } from '../../config/api-routes.config';
 import { ACCESS_TOKEN } from '../constants';
 
@@ -31,11 +32,12 @@ export class AuthService {
   }
 
   fetchAndStoreProfile(): Observable<UserProfileDto> {
-    const profile$ = this.getProfile();
-    profile$.subscribe((profile) => {
-      this.userProfileSignal.set(profile);
-    });
-    return profile$;
+    return this.getProfile().pipe(
+      tap((profile) => {
+        console.log('Profile fetched:', profile);
+        this.userProfileSignal.set(profile);
+      })
+    );
   }
 
   getUserProfile() {

@@ -28,9 +28,10 @@ export class NotificationsService {
    * Get all notifications for current user
    */
   getNotifications(): Observable<NotificationResponse> {
-    return this.http.get<NotificationResponse>(`${API_ROUTES.notifications}`)
+    return this.http.get<NotificationResponse>(API_ROUTES.notifications.base)
       .pipe(
         tap(response => {
+          console.log('Notifications fetched:', response);
           this.notificationsSignal.set(response.notifications);
           this.unreadCountSignal.set(response.unreadCount);
         }),
@@ -46,17 +47,22 @@ export class NotificationsService {
    */
   markAsRead(notificationId: number): Observable<void> {
     return this.http.put<void>(
-      `${API_ROUTES.notifications}/${notificationId}/read`,
+      API_ROUTES.notifications.markAsRead(notificationId.toString()),
       {}
     ).pipe(
       tap(() => {
+        console.log('Marked as read:', notificationId);
         // Update local state (PDF Section 3.1.2 - update())
         this.notificationsSignal.update(notifications =>
           notifications.map(n =>
             n.id === notificationId ? { ...n, read: true } : n
           )
         );
-        this.unreadCountSignal.update(count => Math.max(0, count - 1));
+        this.unreadCountSignal.update(count => {
+          const newCount = Math.max(0, count - 1);
+          console.log('Unread count updated:', count, '->', newCount);
+          return newCount;
+        });
       })
     );
   }
@@ -65,7 +71,7 @@ export class NotificationsService {
    * Mark all as read
    */
   markAllAsRead(): Observable<void> {
-    return this.http.put<void>(`${API_ROUTES.notifications}/read-all`, {})
+    return this.http.post<void>(API_ROUTES.notifications.markAllAsRead, {})
       .pipe(
         tap(() => {
           this.notificationsSignal.update(notifications =>

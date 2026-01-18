@@ -48,5 +48,6 @@ export const API_ROUTES = {
   notifications: {
     base: `${API_BASE}/notifications`,
     markAsRead: (id: string) => `${API_BASE}/notifications/${id}/read`,
+    markAllAsRead: `${API_BASE}/notifications/mark-all-read`,
   },
 } as const;

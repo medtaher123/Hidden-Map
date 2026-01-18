@@ -18,19 +18,19 @@ export class NotificationsController {
 
   @Get()
   async getNotifications(@Request() req): Promise<NotificationResponseDto> {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     return this.notificationsService.findAllByUser(userId);
   }
 
   @Put(':id/read')
   async markAsRead(@Param('id') id: string, @Request() req): Promise<void> {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     await this.notificationsService.markAsRead(+id, userId);
   }
 
   @Post('mark-all-read')
   async markAllAsRead(@Request() req): Promise<void> {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     await this.notificationsService.markAllAsRead(userId);
   }
 }

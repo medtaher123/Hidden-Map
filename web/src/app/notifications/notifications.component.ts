@@ -60,8 +60,12 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     if (!notification.read) {
       this.notificationsService.markAsRead(notification.id).subscribe({
         next: () => {
-          // Navigate if location-related
-          if (notification.metadata?.locationId) {
+          // Navigate based on notification type
+          if (notification.type === 'location_approved' && notification.message.includes('submitted for review')) {
+            // Admin notification about new submission - go to admin page
+            this.router.navigate(['/admin/pending-locations']);
+          } else if (notification.metadata?.locationId) {
+            // User notification about their location - go to discover
             this.router.navigate(['/discover', notification.metadata.locationId]);
           }
         },

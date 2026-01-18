@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { NotificationsService } from '../../shared/services/notifications.service';
 import { Notification } from '../../shared/models/notification.model';
 
@@ -10,7 +10,6 @@ import { Notification } from '../../shared/models/notification.model';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="relative">
-      <!-- Bell Icon -->
       <button 
         (click)="toggleDropdown()"
         class="relative p-2 hover:bg-gray-100 rounded-full transition">
@@ -23,7 +22,6 @@ import { Notification } from '../../shared/models/notification.model';
         }
       </button>
 
-      <!-- Dropdown -->
       @if (isOpen()) {
         <div class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
           <!-- Header -->
@@ -61,6 +59,7 @@ import { Notification } from '../../shared/models/notification.model';
 })
 export class NotificationsDropdownComponent {
   private notificationsService = inject(NotificationsService);
+  private router = inject(Router);
 
   unreadCount = this.notificationsService.unreadCount;
   hasUnread = this.notificationsService.hasUnread;
@@ -83,5 +82,14 @@ export class NotificationsDropdownComponent {
   markAsRead(notification: Notification) {
     this.notificationsService.markAsRead(notification.id).subscribe();
     this.closeDropdown();
+    
+    // Navigate based on notification type
+    if (notification.type === 'location_approved' && notification.message.includes('submitted for review')) {
+      // Admin notification about new submission - go to admin page
+      this.router.navigate(['/admin/pending-locations']);
+    } else if (notification.metadata?.locationId) {
+      // User notification about their location - go to discover
+      this.router.navigate(['/discover', notification.metadata.locationId]);
+    }
   }
 }
