@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'providers/locations_provider.dart';
 import 'screens/map_screen.dart';
 import 'screens/submit_screen.dart';
+import 'screens/leaderboard_screen.dart';
+import 'screens/admin_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,7 +43,15 @@ final _router = GoRouter(
           path: '/submit',
           builder: (context, state) => const SubmitScreen(),
         ),
+        GoRoute(
+          path: '/leaderboard',
+          builder: (context, state) => const LeaderboardScreen(),
+        ),
       ],
+    ),
+    GoRoute(
+      path: '/admin',
+      builder: (context, state) => const AdminScreen(),
     ),
   ],
 );
@@ -54,6 +64,12 @@ class ScaffoldWithNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).uri.path;
+    int currentIndex = 0;
+    if (currentPath == '/submit') {
+      currentIndex = 1;
+    } else if (currentPath == '/leaderboard') {
+      currentIndex = 2;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -70,15 +86,25 @@ class ScaffoldWithNavBar extends StatelessWidget {
             ),
           ],
         ),
+        actions: [
+          // Admin button - only show for admin users
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings),
+            onPressed: () => context.push('/admin'),
+            tooltip: 'Admin Panel',
+          ),
+        ],
       ),
       body: child,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentPath == '/' ? 0 : 1,
+        currentIndex: currentIndex,
         onTap: (index) {
           if (index == 0) {
             context.go('/');
-          } else {
+          } else if (index == 1) {
             context.go('/submit');
+          } else if (index == 2) {
+            context.go('/leaderboard');
           }
         },
         items: const [
@@ -86,6 +112,10 @@ class ScaffoldWithNavBar extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.add_location),
             label: 'Submit',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.leaderboard),
+            label: 'Leaderboard',
           ),
         ],
       ),

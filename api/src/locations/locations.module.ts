@@ -5,9 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Location } from './entities/location.entity';
 import { Photo } from './entities/photo.entity';
 import { PhotosService } from './service/photos.service';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { User } from '../users/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Location, Photo])],
+  imports: [
+    TypeOrmModule.forFeature([Location, Photo, User]),
+    NotificationsModule,
+  ],
   controllers: [LocationsController],
   providers: [LocationsService, PhotosService],
 })

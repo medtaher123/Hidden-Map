@@ -18,14 +18,16 @@ import { LocationsService } from '../service/locations.service';
 import { CreateLocationDto } from '../dto/create-location.dto';
 import { UpdateLocationDto } from '../dto/update-location.dto';
 import { Public } from '../../auth/decorators/public.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { User } from '../../users/entities/user.entity';
 
 @ApiTags('Locations')
 @ApiBearerAuth('JWT-auth')
-@Public()
 @Controller('locations')
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
 
+  @Public()
   @ApiOperation({ summary: 'Get all locations' })
   @ApiResponse({
     status: 200,
@@ -36,6 +38,7 @@ export class LocationsController {
     return this.locationsService.findAll();
   }
 
+  @Public()
   @ApiOperation({ summary: 'Get location by ID' })
   @ApiParam({ name: 'id', description: 'Location UUID' })
   @ApiResponse({
@@ -52,8 +55,11 @@ export class LocationsController {
   @ApiResponse({ status: 201, description: 'Location created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @Post()
-  createLocation(@Body() createLocationDto: CreateLocationDto) {
-    return this.locationsService.create(createLocationDto);
+  createLocation(
+    @Body() createLocationDto: CreateLocationDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.locationsService.create(createLocationDto, user.id);
   }
 
   @ApiOperation({ summary: 'Update location' })

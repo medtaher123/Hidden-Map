@@ -1,0 +1,88 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Notifications</h1>
+      
+      @if (unreadCount() > 0) {
+        <button 
+          (click)="markAllAsRead()"
+          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+          Mark All as Read
+        </button>
+      }
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        <p class="mt-4 text-gray-600">Loading notifications...</p>
+      </div>
+    }
+
+    <!-- Notifications List  -->
+    @if (!isLoading()) {
+      @if (notifications().length === 0) {
+        <!-- Empty State - PDF Section 4.2.1 - @empty -->
+        <div class="text-center py-12 bg-gray-50 rounded-lg">
+          <p class="text-gray-500 text-lg">No notifications yet</p>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (notification of notifications(); track notification.id) {
+            <!-- PDF Section 4.2.2 - track function -->
+            <div 
+              (click)="markAsRead(notification)"
+              [class]="
+                'p-4 rounded-lg border cursor-pointer transition hover:shadow-md ' +
+                (notification.read 
+                  ? 'bg-white border-gray-200' 
+                  : 'bg-blue-50 border-blue-300')
+              "
+              class="relative">
+              
+              <!-- Unread indicator -->
+              @if (!notification.read) {
+                <div class="absolute top-4 right-4 w-2 h-2 bg-blue-500 rounded-full"></div>
+              }
+
+              <!-- Notification Content -->
+              <div class="flex items-start gap-3">
+                <!-- Icon -->
+                <div class="text-2xl">
+                  {{ getNotificationIcon(notification.type) }}
+                </div>
+
+                <!-- Message -->
+                <div class="flex-1">
+                  <p [class]="notification.read ? 'text-gray-700' : 'text-gray-900 font-semibold'">
+                    {{ notification.message }}
+                  </p>
+                  
+                  <!-- Metadata -->
+                  @if (notification.metadata?.locationName) {
+                    <p class="text-sm text-gray-500 mt-1">
+                      Location: {{ notification.metadata?.locationName }}
+                    </p>
+                  }
+                  
+                  @if (notification.metadata?.points) {
+                    <p class="text-sm text-green-600 mt-1">
+                      +{{ notification.metadata?.points }} points
+                    </p>
+                  }
+
+                  <!-- Timestamp - PDF Section 7.1 - date pipe -->
+                  <p class="text-xs text-gray-400 mt-2">
+                    {{ notification.createdAt | date:'short' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>
