@@ -1,0 +1,107 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Page Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">🏆 Leaderboard</h1>
+    <p class="text-gray-600">
+      Top contributors in the Hidden Map community
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="mt-4 text-gray-600 font-medium">Loading leaderboard...</p>
+      </div>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && users().length === 0) {
+    <div class="bg-white rounded-lg shadow p-12 text-center">
+      <p class="text-gray-500 text-lg">No users found yet. Be the first to contribute!</p>
+    </div>
+  }
+
+  <!-- Leaderboard Content -->
+  @if (!loading() && users().length > 0) {
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+      <!-- Table Header -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+        <div class="grid grid-cols-12 gap-4 px-6 py-4 font-bold text-sm uppercase tracking-wide">
+          <div class="col-span-1 text-center">Rank</div>
+          <div class="col-span-6 md:col-span-7">User</div>
+          <div class="col-span-3 md:col-span-2 text-center">Points</div>
+          <div class="col-span-2 hidden md:block"></div>
+        </div>
+      </div>
+
+      <!-- Leaderboard Rows -->
+      <div class="divide-y divide-gray-200">
+        @for (user of users(); track user.id; let idx = $index) {
+          <div
+            class="grid grid-cols-12 gap-4 px-6 py-5 items-center transition-all duration-200 hover:bg-gray-50"
+            [class.bg-blue-50]="isCurrentUser(user)"
+            [class.border-l-4]="isCurrentUser(user)"
+            [class.border-blue-600]="isCurrentUser(user)"
+          >
+            <!-- Rank with Medal Icons for Top 3 -->
+            <div class="col-span-1 text-center">
+              @if (user.rank === 1) {
+                <span class="text-3xl">🥇</span>
+              } @else if (user.rank === 2) {
+                <span class="text-3xl">🥈</span>
+              } @else if (user.rank === 3) {
+                <span class="text-3xl">🥉</span>
+              } @else {
+                <span class="text-xl font-bold text-gray-600">#{{ user.rank }}</span>
+              }
+            </div>
+
+            <!-- User Info -->
+            <div class="col-span-6 md:col-span-7 flex items-center gap-3">
+              @if (user.avatarUrl) {
+                <img
+                  [src]="user.avatarUrl"
+                  [alt]="user.name"
+                  class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 shadow-sm"
+                />
+              } @else {
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                  {{ (user.name?.charAt(0) || '?').toUpperCase() }}
+                </div>
+              }
+              <div>
+                <div class="font-semibold text-gray-800 text-lg">
+                  {{ user.name }}
+                </div>
+                @if (isCurrentUser(user)) {
+                  <span class="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full mt-1">
+                    You
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Points -->
+            <div class="col-span-3 md:col-span-2 text-center">
+              <div class="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-md">
+                <span class="text-white font-bold text-lg">{{ user.points }}</span>
+                <span class="text-white text-xs">pts</span>
+              </div>
+            </div>
+
+            <!-- Empty column for spacing on larger screens -->
+            <div class="col-span-2 hidden md:block"></div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Footer Stats -->
+    <div class="mt-6 text-center text-gray-600 text-sm">
+      <p>Showing {{ users().length }} top contributors</p>
+    </div>
+  }
+</div>

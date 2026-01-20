@@ -1,9 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { TimestampEntity } from '../../shared/entities/timestamp.entity';
 import { Photo } from './photo.entity';
 import { Rating } from '../../ratings/entities/rating.entity';
 import { Comment } from '../../comments/entities/comment.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
+import { User } from '../../users/entities/user.entity';
+
+export enum LocationStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+}
 
 @Entity('locations')
 export class Location extends TimestampEntity {
@@ -30,6 +37,20 @@ export class Location extends TimestampEntity {
 
   @Column({ nullable: true })
   city: string;
+
+  @Column({
+    type: 'enum',
+    enum: LocationStatus,
+    default: LocationStatus.PENDING,
+  })
+  status: LocationStatus;
+
+  @Column({ nullable: true })
+  submittedById: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'submittedById' })
+  submittedBy: User;
 
   @OneToMany(() => Photo, (photo) => photo.location, { cascade: true })
   photos: Photo[];
