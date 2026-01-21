@@ -1,11 +1,11 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, OnDestroy, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, OnDestroy, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Location, Comment, Rating, LOCATION_CATEGORIES } from '../../shared/models/location.model';
 import { RatingsService } from '../../shared/services/ratings.service';
 import { CommentsService } from '../../shared/services/comments.service';
 import { FavoritesService } from '../../shared/services/favorites.service';
 import { AuthService } from '../../auth/services/auth.service';
-import { Subject, takeUntil, catchError, of, forkJoin } from 'rxjs';
+import { Subject, takeUntil, catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-location-details',
@@ -19,21 +19,15 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   @Output() close = new EventEmitter<void>();
   @Output() favoriteChanged = new EventEmitter<{ locationId: string; isFavorite: boolean }>();
 
-  private ratingsService = inject(RatingsService);
-  private commentsService = inject(CommentsService);
-  private favoritesService = inject(FavoritesService);
+  ratingsService = inject(RatingsService);
+  commentsService = inject(CommentsService);
+  favoritesService = inject(FavoritesService);
   private authService = inject(AuthService);
   private destroy$ = new Subject<void>();
 
-  // Signals for reactive state
   currentPhotoIndex = signal(0);
-  ratings = signal<Rating[]>([]);
-  comments = signal<Comment[]>([]);
   userRating = signal(0);
   newComment = signal('');
-  favoriteStatus = signal(false);
-  isLoadingComments = signal(false);
-  isLoadingRatings = signal(false);
   isSubmittingComment = signal(false);
   isTogglingFavorite = signal(false);
   currentUserId = signal<string | null>(null);
@@ -52,6 +46,15 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
     if (this.location) {
       this.loadLocationData();
     }
+
+    effect(() => {
+      const ratings = this.ratingsService.ratingsResource.value();
+      if (ratings) {
+        const userId = this.currentUserId();
+        const userRatingObj = userId ? ratings.find(r => r.user.id === userId) : null;
+        this.userRating.set(userRatingObj?.rating || 0);
+      }
+    });
   }
 
   ngOnChanges() {
@@ -71,52 +74,9 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
 
     const locationId = this.location.id;
 
-    // Load all data in parallel using forkJoin for better performance
-    this.isLoadingRatings.set(true);
-    this.isLoadingComments.set(true);
-
-    forkJoin({
-      ratings: this.ratingsService.getRatings(locationId).pipe(
-        catchError(err => {
-          console.error('Error loading ratings:', err);
-          return of([]);
-        })
-      ),
-      comments: this.commentsService.getComments(locationId).pipe(
-        catchError(err => {
-          console.error('Error loading comments:', err);
-          return of([]);
-        })
-      ),
-      isFavorite: this.authService.isAuthenticated()
-        ? this.favoritesService.isFavorite(locationId).pipe(
-            catchError(err => {
-              console.error('Error checking favorite status:', err);
-              return of(false);
-            })
-          )
-        : of(false)
-    })
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: ({ ratings, comments, isFavorite }) => {
-        this.ratings.set(ratings);
-        const userId = this.currentUserId();
-        const userRatingObj = userId ? ratings.find(r => r.user.id === userId) : null;
-        this.userRating.set(userRatingObj?.rating || 0);
-        this.isLoadingRatings.set(false);
-
-        this.comments.set(comments);
-        this.isLoadingComments.set(false);
-
-        this.favoriteStatus.set(isFavorite);
-      },
-      error: (err) => {
-        console.error('Error loading location data:', err);
-        this.isLoadingRatings.set(false);
-        this.isLoadingComments.set(false);
-      }
-    });
+    this.ratingsService.setLocationId(locationId);
+    this.commentsService.setLocationId(locationId);
+    this.favoritesService.setLocationId(locationId);
   }
 
   get categoryInfo() {
@@ -129,9 +89,9 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   averageRating(): number {
-    const ratingsArray = this.ratings();
+    const ratingsArray = this.ratingsService.ratingsResource.value() || [];
     if (ratingsArray.length === 0) return 0;
-    const sum = ratingsArray.reduce((acc, r) => acc + r.rating, 0);
+    const sum = ratingsArray.reduce((acc: number, r: Rating) => acc + r.rating, 0);
     return sum / ratingsArray.length;
   }
 
@@ -152,35 +112,21 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   rateLocation(rating: number) {
-    if (!this.location || this.isLoadingRatings() || !this.authService.isAuthenticated()) return;
+    if (!this.location || this.ratingsService.ratingsResource.isLoading() || !this.authService.isAuthenticated()) return;
 
     const locationId = this.location.id;
-    this.isLoadingRatings.set(true);
 
     this.ratingsService.rateLocation(locationId, rating)
       .pipe(
         takeUntil(this.destroy$),
         catchError(err => {
           console.error('Error rating location:', err);
-          this.isLoadingRatings.set(false);
           return of(null);
         })
       )
       .subscribe(() => {
         this.userRating.set(rating);
-        // Reload ratings to update average
-        this.ratingsService.getRatings(locationId)
-          .pipe(
-            takeUntil(this.destroy$),
-            catchError(err => {
-              console.error('Error reloading ratings:', err);
-              return of([]);
-            })
-          )
-          .subscribe(ratings => {
-            this.ratings.set(ratings);
-            this.isLoadingRatings.set(false);
-          });
+        this.ratingsService.reloadRatings();
       });
   }
 
@@ -202,8 +148,8 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
       )
       .subscribe(comment => {
         if (comment) {
-          this.comments.set([...this.comments(), comment]);
           this.newComment.set('');
+          this.commentsService.reloadComments();
         }
         this.isSubmittingComment.set(false);
       });
@@ -213,7 +159,7 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.location || this.isTogglingFavorite() || !this.authService.isAuthenticated()) return;
 
     const locationId = this.location.id;
-    const isFav = this.favoriteStatus();
+    const isFav = this.favoritesService.isFavoriteResource.value() || false;
     this.isTogglingFavorite.set(true);
 
     const operation$ = isFav
@@ -231,15 +177,15 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
       )
       .subscribe(() => {
         const newStatus = !isFav;
-        this.favoriteStatus.set(newStatus);
         this.isTogglingFavorite.set(false);
-        // Emit event to parent component
+        this.favoritesService.reloadFavoriteStatus();
+        this.favoritesService.reloadUserFavorites();
         this.favoriteChanged.emit({ locationId, isFavorite: newStatus });
       });
   }
 
   isFavorite(): boolean {
-    return this.favoriteStatus();
+    return this.favoritesService.isFavoriteResource.value() || false;
   }
 
   onClose() {

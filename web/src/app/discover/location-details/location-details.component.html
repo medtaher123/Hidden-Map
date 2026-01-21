@@ -160,7 +160,7 @@
             }
           </div>
           <span class="text-sm text-gray-600">
-            {{ averageRating() | number:'1.1-1' }} ({{ ratings().length }} {{ ratings().length === 1 ? 'rating' : 'ratings' }})
+            {{ averageRating() | number:'1.1-1' }} ({{ (ratingsService.ratingsResource.value() || []).length }} {{ (ratingsService.ratingsResource.value() || []).length === 1 ? 'rating' : 'ratings' }})
           </span>
         </div>
 
@@ -217,16 +217,16 @@
 
         <!-- Comments List -->
         <div class="space-y-3">
-          @if (isLoadingComments()) {
+          @if (commentsService.commentsResource.isLoading()) {
             <div class="text-center py-4 text-gray-500">
               <p>Loading comments...</p>
             </div>
-          } @else if (comments().length === 0) {
+          } @else if ((commentsService.commentsResource.value() || []).length === 0) {
             <div class="text-center py-4 text-gray-500">
               <p class="text-sm">No comments yet. Be the first to comment!</p>
             </div>
           } @else {
-            @for (comment of comments(); track comment.id) {
+            @for (comment of (commentsService.commentsResource.value() || []); track comment.id) {
               <div class="bg-gray-50 p-3 rounded-lg">
                 <div class="flex items-start space-x-3">
                   <img

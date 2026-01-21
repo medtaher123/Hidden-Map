@@ -1,11 +1,11 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FavoritesService } from '../shared/services/favorites.service';
 import { AuthService } from '../auth/services/auth.service';
 import { Location, LOCATION_CATEGORIES } from '../shared/models/location.model';
 import { LocationDetailsComponent } from '../discover/location-details/location-details.component';
-import { Subject, takeUntil, catchError, of } from 'rxjs';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-favorites',
@@ -14,14 +14,10 @@ import { Subject, takeUntil, catchError, of } from 'rxjs';
   styleUrl: './favorites.component.css',
 })
 export class FavoritesComponent implements OnInit, OnDestroy {
-  private favoritesService = inject(FavoritesService);
+  favoritesService = inject(FavoritesService);
   private authService = inject(AuthService);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
-
-  favoriteLocations = signal<Location[]>([]);
-  isLoading = signal(true);
-  error = signal<string | null>(null);
 
   isDetailsOpen = false;
   selectedLocation: Location | null = null;
@@ -32,7 +28,7 @@ export class FavoritesComponent implements OnInit, OnDestroy {
       this.router.navigate(['/auth/login']);
       return;
     }
-    this.loadFavorites();
+    this.favoritesService.reloadUserFavorites();
   }
 
   ngOnDestroy() {
@@ -40,29 +36,8 @@ export class FavoritesComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadFavorites() {
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    // Get user's favorite locations directly from the API
-    this.favoritesService.getUserFavorites()
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError(err => {
-          console.error('Error loading favorites:', err);
-          this.error.set('Failed to load favorites. Please try again.');
-          this.isLoading.set(false);
-          return of([]);
-        })
-      )
-      .subscribe((favorites: Location[]) => {
-        this.favoriteLocations.set(favorites);
-        this.isLoading.set(false);
-      });
-  }
-
   getCategoryInfo(category: string) {
-    return LOCATION_CATEGORIES[category.toLowerCase() as keyof typeof LOCATION_CATEGORIES] 
+    return LOCATION_CATEGORIES[category.toLowerCase() as keyof typeof LOCATION_CATEGORIES]
       || LOCATION_CATEGORIES.other;
   }
 
@@ -80,17 +55,13 @@ export class FavoritesComponent implements OnInit, OnDestroy {
 
   onFavoriteChanged(event: { locationId: string; isFavorite: boolean }) {
     if (!event.isFavorite) {
-      // Remove from favorites list
-      const currentFavorites = this.favoriteLocations();
-      this.favoriteLocations.set(
-        currentFavorites.filter(loc => loc.id !== event.locationId)
-      );
+      this.favoritesService.reloadUserFavorites();
       this.closeLocationDetails();
     }
   }
 
   retry() {
-    this.loadFavorites();
+    this.favoritesService.reloadUserFavorites();
   }
 }
 
