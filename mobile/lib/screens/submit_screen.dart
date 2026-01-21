@@ -4,6 +4,7 @@ import '../models/location.dart';
 import '../models/photo.dart';
 import '../models/location_category.dart';
 import '../providers/locations_provider.dart';
+import '../providers/auth_provider.dart';
 
 class SubmitScreen extends StatefulWidget {
   const SubmitScreen({super.key});
@@ -42,6 +43,19 @@ class _SubmitScreenState extends State<SubmitScreen> {
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!authProvider.isAuthenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please login to submit locations'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
 
     setState(() => _isSubmitting = true);
 

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import '../config/constants.dart';
 import '../models/location.dart';
+import '../models/dashboard.dart';
 
 class AdminService {
   final Dio _dio;
@@ -18,6 +19,36 @@ class AdminService {
       ) {
     if (_token != null) {
       _dio.options.headers['Authorization'] = 'Bearer $_token';
+    }
+  }
+
+  Future<DashboardData> getDashboardData() async {
+    try {
+      final response = await _dio.get(ApiConstants.adminDashboardEndpoint);
+      return DashboardData.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == HttpStatus.unauthorized) {
+        throw Exception('Unauthorized - Admin access required');
+      }
+      if (e.response?.statusCode == HttpStatus.forbidden) {
+        throw Exception('Forbidden - Admin privileges required');
+      }
+      throw Exception('Failed to load dashboard data: ${e.message}');
+    }
+  }
+
+  Future<DashboardStats> getDashboardStats() async {
+    try {
+      final response = await _dio.get(ApiConstants.adminDashboardStatsEndpoint);
+      return DashboardStats.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == HttpStatus.unauthorized) {
+        throw Exception('Unauthorized - Admin access required');
+      }
+      if (e.response?.statusCode == HttpStatus.forbidden) {
+        throw Exception('Forbidden - Admin privileges required');
+      }
+      throw Exception('Failed to load dashboard stats: ${e.message}');
     }
   }
 

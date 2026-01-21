@@ -4,13 +4,19 @@ import '../models/location.dart';
 
 class LocationService {
   final Dio _dio;
+  final String? _token;
 
-  LocationService()
-      : _dio = Dio(BaseOptions(
+  LocationService({String? token})
+      : _token = token,
+        _dio = Dio(BaseOptions(
           baseUrl: ApiConstants.baseUrl,
           connectTimeout: const Duration(seconds: 5),
           receiveTimeout: const Duration(seconds: 3),
-        ));
+        )) {
+    if (_token != null) {
+      _dio.options.headers['Authorization'] = 'Bearer $_token';
+    }
+  }
 
   Future<List<Location>> getLocations() async {
     try {

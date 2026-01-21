@@ -13,6 +13,7 @@ class AuthProvider with ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _currentUser != null;
   bool get isAdmin => _currentUser?.role == UserRole.admin;
+  String? get token => _authService.token;
 
   AuthProvider() {
     _initAuth();

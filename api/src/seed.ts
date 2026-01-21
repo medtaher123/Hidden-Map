@@ -2,11 +2,12 @@ import { DataSource } from 'typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Location } from '../src/locations/entities/location.entity';
 import { Photo } from '../src/locations/entities/photo.entity';
-import { User } from '../src/users/entities/user.entity';
+import { User, UserRole } from '../src/users/entities/user.entity';
 import { Comment } from '../src/comments/entities/comment.entity';
 import { Rating } from '../src/ratings/entities/rating.entity';
 import { Favorite } from '../src/favorites/entities/favorite.entity';
 import { Follower } from '../src/followers/entities/follower.entity';
+import { Notification } from '../src/notifications/entities/notification.entity';
 import { NestFactory } from '@nestjs/core';
 import * as bcrypt from 'bcrypt';
 
@@ -183,6 +184,7 @@ async function seed(configService: ConfigService) {
 
 
     // Clear existing data in correct order (delete child records first)
+    await dataSource.createQueryBuilder().delete().from(Notification).execute();
     await dataSource.createQueryBuilder().delete().from(Comment).execute();
     await dataSource.createQueryBuilder().delete().from(Rating).execute();
     await dataSource.createQueryBuilder().delete().from(Favorite).execute();
@@ -191,6 +193,18 @@ async function seed(configService: ConfigService) {
     await dataSource.createQueryBuilder().delete().from(Follower).execute();
     await dataSource.createQueryBuilder().delete().from(User).execute();
     console.log('Cleared existing data');
+
+    // Create admin user
+    const adminUser = userRepository.create({
+      name: 'admin',
+      email: 'admin@example.com',
+      avatarUrl: 'https://i.pravatar.cc/150?img=10',
+      bio: 'System Administrator',
+      password: await bcrypt.hash('admin123', 10),
+      role: UserRole.ADMIN,
+    });
+    await userRepository.save(adminUser);
+    console.log('✓ Created admin user (email: admin@example.com, password: admin123)');
 
     // Create test user with specific UUID
     const testUser = userRepository.create({
@@ -267,7 +281,12 @@ async function seed(configService: ConfigService) {
 
     console.log('\nSeeding completed successfully!');
     console.log(`Added ${mockLocations.length} locations with photos`);
-    console.log('Added 3 test users');
+    console.log('Added 4 test users (including 1 admin)');
+    console.log('\n--- Login Credentials ---');
+    console.log('Admin: admin@example.com / admin123');
+    console.log('User: test@example.com / testpassword');
+    console.log('User: explorer@example.com / explorerpassword');
+    console.log('User: foodie@example.com / foodiepassword');
     
   } catch (error) {
     console.error('Error during seeding:', error);

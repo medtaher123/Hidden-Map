@@ -3,7 +3,13 @@ import '../models/location.dart';
 import '../services/location_service.dart';
 
 class LocationsProvider extends ChangeNotifier {
-  final LocationService _locationService = LocationService();
+  LocationService? _locationService;
+  String? _token;
+
+  void setToken(String? token) {
+    _token = token;
+    _locationService = LocationService(token: token);
+  }
   
   List<Location> _locations = [];
   bool _isLoading = false;
@@ -19,7 +25,8 @@ class LocationsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _locations = await _locationService.getLocations();
+      _locationService ??= LocationService(token: _token);
+      _locations = await _locationService!.getLocations();
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -31,7 +38,8 @@ class LocationsProvider extends ChangeNotifier {
 
   Future<void> addLocation(Location location) async {
     try {
-      await _locationService.createLocation(location);
+      _locationService ??= LocationService(token: _token);
+      await _locationService!.createLocation(location);
       await loadLocations(); // Reload locations after adding
     } catch (e) {
       _error = e.toString();
