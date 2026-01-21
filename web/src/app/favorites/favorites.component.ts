@@ -6,10 +6,11 @@ import { AuthService } from '../auth/services/auth.service';
 import { Location, LOCATION_CATEGORIES } from '../shared/models/location.model';
 import { LocationDetailsComponent } from '../discover/location-details/location-details.component';
 import { Subject } from 'rxjs';
+import { ApiUrlPipe } from "../shared/pipes/api-url.pipe";
 
 @Component({
   selector: 'app-favorites',
-  imports: [CommonModule, LocationDetailsComponent],
+  imports: [CommonModule, LocationDetailsComponent, ApiUrlPipe],
   templateUrl: './favorites.component.html',
   styleUrl: './favorites.component.css',
 })

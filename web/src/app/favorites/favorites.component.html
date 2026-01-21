@@ -36,7 +36,6 @@
       Discover Locations
     </a>
   </div>
-
   <!-- Favorites Grid -->
   <div *ngIf="!favoritesService.userFavoritesResource.isLoading() && !favoritesService.userFavoritesResource.error() && (favoritesService.userFavoritesResource.value() || []).length > 0"
        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -49,7 +48,7 @@
         <div class="relative h-48 bg-gray-200">
           @if (location.photos && location.photos.length > 0) {
             <img
-              [src]="location.photos[0].url"
+              [src]="location.photos[0].url | apiUrl"
               [alt]="location.name"
               class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
             />

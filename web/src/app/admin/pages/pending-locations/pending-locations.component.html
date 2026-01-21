@@ -36,7 +36,7 @@
           <!-- Image -->
           @if (location.photos && location.photos.length > 0) {
             <img 
-              [src]="location.photos[0].url" 
+              [src]="location.photos[0].url | apiUrl" 
               [alt]="location.name"
               class="w-full h-48 object-cover"
             />

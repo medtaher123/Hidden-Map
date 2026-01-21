@@ -1,7 +1,6 @@
 import { DataSource } from 'typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Location } from '../src/locations/entities/location.entity';
-import { Photo } from '../src/locations/entities/photo.entity';
 import { User, UserRole } from '../src/users/entities/user.entity';
 import { Comment } from '../src/comments/entities/comment.entity';
 import { Rating } from '../src/ratings/entities/rating.entity';

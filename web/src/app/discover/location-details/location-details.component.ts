@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, OnDestroy, inject, signal, CUSTOM_ELEMENTS_SCHEMA, effect } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, OnDestroy, inject, signal, effect, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Location, Comment, Rating, LOCATION_CATEGORIES } from '../../shared/models/location.model';
 import { RatingsService } from '../../shared/services/ratings.service';
@@ -6,16 +6,14 @@ import { CommentsService } from '../../shared/services/comments.service';
 import { FavoritesService } from '../../shared/services/favorites.service';
 import { AuthService } from '../../auth/services/auth.service';
 import { Subject, takeUntil, catchError, of } from 'rxjs';
-import { ApiUrlPipe } from "../../shared/pipes/api-url.pipe";
-import { trigger, transition, style, animate } from '@angular/animations';
-
+import { ApiUrlPipe } from '../../shared/pipes/api-url.pipe';
 
 @Component({
   selector: 'app-location-details',
-  imports: [CommonModule, ApiUrlPipe ],
+  imports: [CommonModule, ApiUrlPipe],
   templateUrl: './location-details.component.html',
   styleUrl: './location-details.component.css',
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
 
 })
 export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
@@ -37,7 +35,6 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   isTogglingFavorite = signal(false);
   currentUserId = signal<string | null>(null);
 
-  
   ngOnInit() {
     // Load current user profile to get user ID
     this.authService.getProfile().pipe(
@@ -48,7 +45,7 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
         this.currentUserId.set(profile.id);
       }
     });
-    
+
     if (this.location) {
       this.loadLocationData();
     }
@@ -80,52 +77,9 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
 
     const locationId = this.location.id;
 
-    // Load all data in parallel using forkJoin for better performance
-    this.isLoadingRatings.set(true);
-    this.isLoadingComments.set(true);
-
-    forkJoin({
-      ratings: this.ratingsService.getRatings(locationId).pipe(
-        catchError(err => {
-          console.error('Error loading ratings:', err);
-          return of([]);
-        })
-      ),
-      comments: this.commentsService.getComments(locationId).pipe(
-        catchError(err => {
-          console.error('Error loading comments:', err);
-          return of([]);
-        })
-      ),
-      isFavorite: this.authService.isAuthenticated()
-        ? this.favoritesService.isFavorite(locationId).pipe(
-            catchError(err => {
-              console.error('Error checking favorite status:', err);
-              return of(false);
-            })
-          )
-        : of(false)
-    })
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: ({ ratings, comments, isFavorite }) => {
-        this.ratings.set(ratings);
-        const userId = this.currentUserId();
-        const userRatingObj = userId ? ratings.find(r => r.user.id === userId) : null;
-        this.userRating.set(userRatingObj?.rating || 0);
-        this.isLoadingRatings.set(false);
-
-        this.comments.set(comments);
-        this.isLoadingComments.set(false);
-
-        this.favoriteStatus.set(isFavorite);
-      },
-      error: (err) => {
-        console.error('Error loading location data:', err);
-        this.isLoadingRatings.set(false);
-        this.isLoadingComments.set(false);
-      }
-    });
+    this.ratingsService.setLocationId(locationId);
+    this.commentsService.setLocationId(locationId);
+    this.favoritesService.setLocationId(locationId);
   }
 
   get categoryInfo() {
@@ -190,7 +144,6 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
 
   toggleFavorite() {
     if (!this.location || this.isTogglingFavorite() || !this.authService.isAuthenticated()) return;
-    console.log("0061",this.location)
     const locationId = this.location.id;
     const isFav = this.favoritesService.isFavoriteResource.value() || false;
     this.isTogglingFavorite.set(true);

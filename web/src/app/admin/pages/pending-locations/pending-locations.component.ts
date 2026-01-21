@@ -2,11 +2,12 @@ import { Component, signal, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
 import { PendingLocation } from '../../models/pending-location.model';
+import { ApiUrlPipe } from "../../../shared/pipes/api-url.pipe";
 
 @Component({
   selector: 'app-pending-locations',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ApiUrlPipe],
   templateUrl: './pending-locations.component.html',
 })
 export class PendingLocationsComponent {
