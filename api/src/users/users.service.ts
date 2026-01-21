@@ -40,5 +40,31 @@ export class UsersService {
   async remove(id: string): Promise<void> {
     await this.userRepository.softDelete(id);
   }
+
+  async getUserProfile(id: string, currentUserId?: string) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['followers', 'following'],
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const isFollowed = currentUserId
+      ? user.followers?.some((follower) => follower.id === currentUserId) ||
+        false
+      : false;
+
+    return {
+      id: user.id,
+      name: user.name,
+      bio: user.bio,
+      avatarUrl: user.avatarUrl,
+      followersCount: user.followers?.length || 0,
+      followingCount: user.following?.length || 0,
+      isFollowed,
+    };
+  }
 }
 

@@ -20,10 +20,15 @@ export class FollowersService {
   }
 
   async remove(userId: string, followerUserId: string): Promise<void> {
-    await this.followerRepository.delete({
-      user: { id: userId },
-      followerUser: { id: followerUserId },
+    const follower = await this.followerRepository.findOne({
+      where: {
+        user: { id: userId },
+        followerUser: { id: followerUserId },
+      },
     });
+    if (follower) {
+      await this.followerRepository.remove(follower);
+    }
   }
 
   async isFollowing(userId: string, followerUserId: string): Promise<boolean> {

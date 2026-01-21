@@ -1,10 +1,11 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { CredentialsDto } from '../dto/credentials.dto';
 import { AuthResponseDto } from '../dto/auth-response.dto';
 import { UserProfileDto } from '../dto/user-profile.dto';
 import { HttpClient } from '@angular/common/http';
 
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { API_ROUTES } from '../../config/api-routes.config';
 import { ACCESS_TOKEN } from '../constants';
 
@@ -13,6 +14,7 @@ import { ACCESS_TOKEN } from '../constants';
 })
 export class AuthService {
   private http = inject(HttpClient);
+  private userProfileSignal = signal<UserProfileDto | null>(null);
 
   login(credentials: CredentialsDto): Observable<AuthResponseDto> {
     return this.http.post<AuthResponseDto>(API_ROUTES.auth.login, credentials);
@@ -29,11 +31,25 @@ export class AuthService {
     return this.http.post<UserProfileDto>(API_ROUTES.auth.profile, {});
   }
 
+  fetchAndStoreProfile(): Observable<UserProfileDto> {
+    return this.getProfile().pipe(
+      tap((profile) => {
+        console.log('Profile fetched:', profile);
+        this.userProfileSignal.set(profile);
+      })
+    );
+  }
+
+  getUserProfile() {
+    return this.userProfileSignal.asReadonly();
+  }
+
   isAuthenticated(): boolean {
     return !!localStorage.getItem(ACCESS_TOKEN);
   }
 
   logout() {
     localStorage.removeItem(ACCESS_TOKEN);
+    this.userProfileSignal.set(null);
   }
 }

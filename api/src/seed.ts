@@ -6,6 +6,7 @@ import { User } from '../src/users/entities/user.entity';
 import { Comment } from '../src/comments/entities/comment.entity';
 import { Rating } from '../src/ratings/entities/rating.entity';
 import { Favorite } from '../src/favorites/entities/favorite.entity';
+import { Follower } from '../src/followers/entities/follower.entity';
 import { NestFactory } from '@nestjs/core';
 import * as bcrypt from 'bcrypt';
 
@@ -178,6 +179,8 @@ async function seed(configService: ConfigService) {
     const commentRepository = dataSource.getRepository(Comment);
     const ratingRepository = dataSource.getRepository(Rating);
     const favoriteRepository = dataSource.getRepository(Favorite);
+    const followerRepository = dataSource.getRepository(Follower);
+
 
     // Clear existing data in correct order (delete child records first)
     await dataSource.createQueryBuilder().delete().from(Comment).execute();
@@ -185,6 +188,7 @@ async function seed(configService: ConfigService) {
     await dataSource.createQueryBuilder().delete().from(Favorite).execute();
     await dataSource.createQueryBuilder().delete().from(Photo).execute();
     await dataSource.createQueryBuilder().delete().from(Location).execute();
+    await dataSource.createQueryBuilder().delete().from(Follower).execute();
     await dataSource.createQueryBuilder().delete().from(User).execute();
     console.log('Cleared existing data');
 
@@ -238,10 +242,33 @@ async function seed(configService: ConfigService) {
 
       console.log(`✓ Added location: ${location.name}`);
     }
+    // explorer follows testuser
+    const follower1 = followerRepository.create({
+      user: testUser,
+      followerUser: user2,
+    });
+    // foodie follows testuser
+    const follower2 = followerRepository.create({
+      user: testUser,
+      followerUser: user3,
+    });
+    await followerRepository.save([follower1, follower2]);
+
+    console.log('✓ Added followers for testuser');
+
+    const following = followerRepository.create({
+      user: user2,           // explorer is being followed
+      followerUser: testUser // testuser follows explorer
+    });
+
+    await followerRepository.save(following);
+
+    console.log('✓ testuser follows explorer');
 
     console.log('\nSeeding completed successfully!');
     console.log(`Added ${mockLocations.length} locations with photos`);
     console.log('Added 3 test users');
+    
   } catch (error) {
     console.error('Error during seeding:', error);
   } finally {

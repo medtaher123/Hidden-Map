@@ -39,4 +39,23 @@ export const API_ROUTES = {
     byId: (locationId: string, commentId: string) =>
       `${API_BASE}/locations/${locationId}/comments/${commentId}`,
   },
+
+  admin: {
+    base: `${API_BASE}/admin`,
+    dashboard: `${API_BASE}/admin/dashboard`,
+    dashboardStats: `${API_BASE}/admin/dashboard/stats`,
+    pendingLocations: `${API_BASE}/admin/pending-locations`,
+    approveLocation: (id: string) => `${API_BASE}/admin/approve-location/${id}`,
+    rejectLocation: (id: string) => `${API_BASE}/admin/reject-location/${id}`,
+  },
+
+  leaderboard: {
+    base: `${API_BASE}/leaderboard`,
+  },
+
+  notifications: {
+    base: `${API_BASE}/notifications`,
+    markAsRead: (id: string) => `${API_BASE}/notifications/${id}/read`,
+    markAllAsRead: `${API_BASE}/notifications/mark-all-read`,
+  },
 } as const;

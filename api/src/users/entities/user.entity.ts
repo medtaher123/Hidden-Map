@@ -5,7 +5,10 @@ import { Comment } from '../../comments/entities/comment.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
 import { Follower } from '../../followers/entities/follower.entity';
 
-
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+}
 
 @Entity('users')
 export class User extends TimestampEntity {
@@ -27,6 +30,16 @@ export class User extends TimestampEntity {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @Column({ type: 'int', default: 0 })
+  points: number;
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER,
+  })
+  role: UserRole;
 
   @OneToMany(() => Rating, (rating) => rating.user)
   ratings: Rating[];

@@ -5,9 +5,9 @@ export const APP_ROUTES = {
   },
 
   user: {
-    profile: '/profile',
+    profile: (id: string) => ['/profile', id],
   },
-
+  
   app: {
     home: '/',
     submit: '/submit',

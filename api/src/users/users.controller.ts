@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -22,6 +23,14 @@ export class UsersController {
   @Get(':id')
   getUserById(@Param('id') id: string) {
     return this.usersService.findOne(id);
+  }
+
+  @Get(':id/profile')
+  getUserProfile(
+    @Param('id') id: string,
+    @Query('currentUserId') currentUserId?: string,
+  ) {
+    return this.usersService.getUserProfile(id, currentUserId);
   }
 
   @Post()
