@@ -7,10 +7,10 @@ import {
   Min,
   IsArray,
   ValidateNested,
+  IsUUID 
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CreatePhotoDto } from './create-photo.dto';
 
 export class CreateLocationDto {
   @ApiProperty({
@@ -78,12 +78,11 @@ export class CreateLocationDto {
   city?: string;
 
   @ApiPropertyOptional({
-    description: 'Array of photos for the location',
-    type: [CreatePhotoDto],
+    description: 'Array of photo IDs for the location',
+    type: [String],
   })
   @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreatePhotoDto)
-  photos: CreatePhotoDto[];
+  @IsUUID('all', { each: true }) 
+  photos?: string[];
 }

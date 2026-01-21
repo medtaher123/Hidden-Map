@@ -7,6 +7,7 @@ import { CreateLocationDto } from '../dto/create-location.dto';
 import { UpdateLocationDto } from '../dto/update-location.dto';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { NotificationType } from '../../notifications/entities/notification.entity';
+import { MediaFile } from '../../file/entities/file.entity';
 
 @Injectable()
 export class LocationsService {
@@ -30,12 +31,16 @@ export class LocationsService {
   }
 
   async create(locationData: CreateLocationDto, userId: string): Promise<Location> {
-    const location = this.locationRepository.create({
-      ...locationData,
-      submittedById: userId,
-    });
-    const savedLocation = await this.locationRepository.save(location);
 
+    const { photos, ...rest } = locationData;
+
+  const location = this.locationRepository.create({
+    ...rest,
+    submittedById: userId,
+    photos: photos ? photos.map(id => ({ id } as MediaFile)) : [],
+  });
+
+  const savedLocation = await this.locationRepository.save(location);
     // Notify all admins about new location submission
     const admins = await this.userRepository.find({
       where: { role: UserRole.ADMIN },
@@ -56,9 +61,15 @@ export class LocationsService {
     return savedLocation;
   }
 
-  update(id: string, locationData: UpdateLocationDto): Promise<Location> {
-    return this.locationRepository.save({ id, ...locationData });
-  }
+  async update(id: string, updateLocationDto: UpdateLocationDto) {
+  const { photos, ...locationData } = updateLocationDto;
+
+  return this.locationRepository.save({
+    id,
+    ...locationData,
+    photos: photos?.map((photoId) => ({ id: photoId }))
+  });
+}
 
   async remove(id: string): Promise<void> {
     await this.locationRepository.softDelete(id);

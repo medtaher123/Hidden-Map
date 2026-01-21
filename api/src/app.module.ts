@@ -7,7 +7,6 @@ import { LocationsModule } from './locations/locations.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { RatingsModule } from './ratings/ratings.module';
 import { CommentsModule } from './comments/comments.module';
-import { PhotosService } from './locations/service/photos.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';

@@ -1,10 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn, JoinTable, ManyToMany } from 'typeorm';
 import { TimestampEntity } from '../../shared/entities/timestamp.entity';
-import { Photo } from './photo.entity';
 import { Rating } from '../../ratings/entities/rating.entity';
 import { Comment } from '../../comments/entities/comment.entity';
 import { Favorite } from '../../favorites/entities/favorite.entity';
 import { User } from '../../users/entities/user.entity';
+import { MediaFile } from '../../file/entities/file.entity';
 
 export enum LocationStatus {
   PENDING = 'pending',
@@ -52,8 +52,9 @@ export class Location extends TimestampEntity {
   @JoinColumn({ name: 'submittedById' })
   submittedBy: User;
 
-  @OneToMany(() => Photo, (photo) => photo.location, { cascade: true })
-  photos: Photo[];
+  @ManyToMany(() => MediaFile)
+  @JoinTable()
+  photos: MediaFile[];
 
   @OneToMany(() => Rating, (rating) => rating.location)
   ratings: Rating[];
