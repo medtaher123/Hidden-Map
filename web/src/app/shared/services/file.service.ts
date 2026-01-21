@@ -18,11 +18,6 @@ export class FileService {
     return this.http.post<FileUploadResponse>(
       API_ROUTES.files.upload,
       formData
-    ).pipe(
-      tap((v: FileUploadResponse) => {
-        v.fullUrl = `${API_ROUTES.base}${v.url}`;
-        console.log("hiiiii",v)
-      })
     )
   }
 }

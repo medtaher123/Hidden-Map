@@ -3,10 +3,11 @@ import { Component, EventEmitter, forwardRef, inject, Output, signal } from '@an
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { FileService } from '../../services/file.service';
 import { FileUploadResponse } from '../../models/file-upload.modal';
+import { ApiUrlPipe } from "../../pipes/api-url.pipe";
 
 @Component({
   selector: 'app-image-uploader',
-  imports: [CommonModule],
+  imports: [CommonModule, ApiUrlPipe],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

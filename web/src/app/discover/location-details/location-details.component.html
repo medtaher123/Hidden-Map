@@ -37,54 +37,20 @@
     </div>
 
     <!-- Photos Carousel -->
-    <div class="relative h-64 bg-gray-200">
-      @if (location.photos && location.photos.length > 0) {
-        <img
-          [src]="location.photos[currentPhotoIndex()].url"
-          [alt]="location.photos[currentPhotoIndex()].caption || location.name"
-          class="w-full h-full object-cover"
-        />
-
-        @if (location.photos.length > 1) {
-          <!-- Previous Button -->
-          <button
-            (click)="previousPhoto()"
-            class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-          </button>
-
-          <!-- Next Button -->
-          <button
-            (click)="nextPhoto()"
-            class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-          </button>
-
-          <!-- Photo Indicators -->
-          <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-2">
-            @for (photo of location.photos; track photo.id; let i = $index) {
-              <div
-                [class.bg-white]="i === currentPhotoIndex()"
-                [class.bg-white]="i !== currentPhotoIndex()"
-                class="w-2 h-2 rounded-full transition"
-              ></div>
-            }
-          </div>
-        }
-      } @else {
-        <div class="text-center">
-          <span class="text-4xl">📸</span>
-          <p class="mt-2 text-sm">No photos available</p>
-        </div>
+    <swiper-container
+      slides-per-view="1"
+      navigation="true"
+      pagination="true"
+      loop="true"
+    >
+      @for (photo of location.photos; track photo.id) {
+        <swiper-slide>
+          <img [src]="photo.url | apiUrl" class="w-full h-64 object-cover" />
+        </swiper-slide>
       }
-    </div>
-
+    </swiper-container>
+ 
+  
     <!-- Location Content -->
     <div class="flex-1 p-4 space-y-4">
       <!-- Category and Location Info -->

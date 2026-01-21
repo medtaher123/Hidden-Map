@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnChanges, OnDestroy, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, OnDestroy, inject, signal, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Location, Comment, Rating, LOCATION_CATEGORIES } from '../../shared/models/location.model';
 import { RatingsService } from '../../shared/services/ratings.service';
@@ -6,12 +6,17 @@ import { CommentsService } from '../../shared/services/comments.service';
 import { FavoritesService } from '../../shared/services/favorites.service';
 import { AuthService } from '../../auth/services/auth.service';
 import { Subject, takeUntil, catchError, of, forkJoin } from 'rxjs';
+import { ApiUrlPipe } from "../../shared/pipes/api-url.pipe";
+import { trigger, transition, style, animate } from '@angular/animations';
+
 
 @Component({
   selector: 'app-location-details',
-  imports: [CommonModule],
+  imports: [CommonModule, ApiUrlPipe ],
   templateUrl: './location-details.component.html',
   styleUrl: './location-details.component.css',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+
 })
 export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() location: Location | null = null;
@@ -38,6 +43,7 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   isTogglingFavorite = signal(false);
   currentUserId = signal<string | null>(null);
 
+  
   ngOnInit() {
     // Load current user profile to get user ID
     this.authService.getProfile().pipe(
@@ -48,7 +54,7 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
         this.currentUserId.set(profile.id);
       }
     });
-
+    
     if (this.location) {
       this.loadLocationData();
     }
@@ -70,7 +76,7 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.location) return;
 
     const locationId = this.location.id;
-
+    console.log("004",locationId)
     // Load all data in parallel using forkJoin for better performance
     this.isLoadingRatings.set(true);
     this.isLoadingComments.set(true);
@@ -135,22 +141,6 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
     return sum / ratingsArray.length;
   }
 
-  previousPhoto() {
-    if (!this.location?.photos) return;
-    const current = this.currentPhotoIndex();
-    this.currentPhotoIndex.set(
-      current === 0 ? this.location.photos.length - 1 : current - 1
-    );
-  }
-
-  nextPhoto() {
-    if (!this.location?.photos) return;
-    const current = this.currentPhotoIndex();
-    this.currentPhotoIndex.set(
-      current === this.location.photos.length - 1 ? 0 : current + 1
-    );
-  }
-
   rateLocation(rating: number) {
     if (!this.location || this.isLoadingRatings() || !this.authService.isAuthenticated()) return;
 
@@ -211,7 +201,7 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
 
   toggleFavorite() {
     if (!this.location || this.isTogglingFavorite() || !this.authService.isAuthenticated()) return;
-
+    console.log("0061",this.location)
     const locationId = this.location.id;
     const isFav = this.favoriteStatus();
     this.isTogglingFavorite.set(true);
