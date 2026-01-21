@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -10,10 +10,11 @@ import { HttpClient } from '@angular/common/http';
 import { LocationsService } from '../shared/services/locations.service';
 import { LOCATION_CATEGORIES } from '../shared/models/location.model';
 import { API_ROUTES } from '../config/api-routes.config';
+import { ImageUploaderComponent } from '../shared/components/image-uploader/image-uploader.component';
 
 @Component({
   selector: 'app-submit',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ImageUploaderComponent],
   templateUrl: './submit.component.html',
   styleUrl: './submit.component.css',
 })
@@ -49,12 +50,13 @@ export class SubmitComponent {
       ],
       address: ['', Validators.required],
       city: ['Tunis', Validators.required],
-      photoUrl: ['', Validators.required],
-      photoCaption: ['', Validators.required],
+      photoIds: [[], [Validators.required, Validators.minLength(1)]],
     });
   }
 
   onSubmit() {
+    this.form.markAllAsTouched();
+    console.log("001",this.form);
     if (this.form.invalid) {
       return;
     }
@@ -71,21 +73,14 @@ export class SubmitComponent {
       longitude: parseFloat(formData.longitude),
       address: formData.address,
       city: formData.city,
-      photos: [
-        {
-          url: formData.photoUrl,
-          thumbnailUrl: formData.photoUrl,
-          caption: formData.photoCaption,
-        },
-      ],
+      photos: formData.photoIds
     };
 
     this.http.post(API_ROUTES.locations.base, payload).subscribe({
       next: () => {
         this.scrollToTop();
         this.submitted.set(true);
-        this.form.reset({ category: 'cafe', city: 'Tunis' });
-        this.submitting.set(false);
+        this.resetForm();
         this.locationsService.locations.reload();
         setTimeout(() => this.submitted.set(false), 3000);
       },
@@ -105,8 +100,9 @@ export class SubmitComponent {
   }
 
   resetForm() {
-    this.form.reset({ category: 'cafe', city: 'Tunis' });
+    this.form.reset({ category: 'cafe', city: 'Tunis', photoIds: [] });
     this.error.set(null);
+    this.submitting.set(false);
   }
 
   getCategoryLabel(category: string): string {

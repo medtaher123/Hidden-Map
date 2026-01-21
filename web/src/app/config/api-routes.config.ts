@@ -1,6 +1,7 @@
 const API_BASE = `http://localhost:3000`;
 
 export const API_ROUTES = {
+  base: API_BASE,
   auth: {
     login: `${API_BASE}/auth/login`,
     register: `${API_BASE}/auth/register`,
@@ -16,6 +17,10 @@ export const API_ROUTES = {
 
   locations: {
     base: `${API_BASE}/locations`,
+  },
+  files: {
+    base: `${API_BASE}/files`,
+    upload: `${API_BASE}/files/upload`,
   },
 
   favorites: {

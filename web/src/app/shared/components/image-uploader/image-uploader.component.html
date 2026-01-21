@@ -1,0 +1,44 @@
+<div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">
+        Photos *
+      </label>
+      
+      <div class="flex flex-wrap gap-4">
+        @for (img of images(); track img.id) {
+          <div class="relative w-32 h-32 group">
+            <img [src]="img.fullUrl" class="w-full h-full object-cover rounded-lg shadow-sm border border-gray-200">
+            
+            <button 
+              type="button"
+              (click)="removeImage(img.id)"
+              class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+              title="Remove image">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        }
+
+        <label 
+          [class.opacity-50]="isUploading()"
+          [class.cursor-not-allowed]="isUploading()"
+          class="w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer text-gray-400 hover:text-blue-500">
+          
+          @if (isUploading()) {
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span class="text-xs font-medium">Add Photo</span>
+            <input 
+              type="file" 
+              accept="image/*" 
+              class="hidden" 
+              (change)="onFileSelected($event)"
+              [disabled]="isUploading()">
+          }
+        </label>
+      </div>
+    </div>
