@@ -1,7 +1,6 @@
 import { DataSource } from 'typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Location } from '../src/locations/entities/location.entity';
-import { Photo } from '../src/locations/entities/photo.entity';
 import { User } from '../src/users/entities/user.entity';
 import { Comment } from '../src/comments/entities/comment.entity';
 import { Rating } from '../src/ratings/entities/rating.entity';
@@ -9,6 +8,7 @@ import { Favorite } from '../src/favorites/entities/favorite.entity';
 import { Follower } from '../src/followers/entities/follower.entity';
 import { NestFactory } from '@nestjs/core';
 import * as bcrypt from 'bcrypt';
+import { MediaFile } from './file/entities/file.entity';
 
 const mockLocations = [
   {
@@ -20,14 +20,7 @@ const mockLocations = [
     longitude: 10.1756,
     address: 'Rue des Teinturiers',
     city: 'Tunis',
-    photos: [
-      {
-        url: 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800',
-        thumbnailUrl:
-          'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=300',
-        caption: 'Medina coffee house interior',
-      },
-    ],
+    photos: [],
   },
   {
     name: 'Bardo Museum',
@@ -38,14 +31,7 @@ const mockLocations = [
     longitude: 10.1839,
     address: 'Rue de Rome',
     city: 'Tunis',
-    photos: [
-      {
-        url: 'https://images.unsplash.com/photo-1564399579945-7ce172fef407?w=800',
-        thumbnailUrl:
-          'https://images.unsplash.com/photo-1564399579945-7ce172fef407?w=300',
-        caption: 'Bardo Museum exterior',
-      },
-    ],
+    photos: [],
   },
   {
     name: 'Belvedere Park',
@@ -56,14 +42,7 @@ const mockLocations = [
     longitude: 10.1753,
     address: 'Montfleury',
     city: 'Tunis',
-    photos: [
-      {
-        url: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800',
-        thumbnailUrl:
-          'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=300',
-        caption: 'Park scenic view',
-      },
-    ],
+    photos: [],
   },
   {
     name: 'Artisan Souk Market',
@@ -74,14 +53,7 @@ const mockLocations = [
     longitude: 10.1744,
     address: 'Souks District',
     city: 'Tunis',
-    photos: [
-      {
-        url: 'https://images.unsplash.com/photo-1555529386-643b1a3da184?w=800',
-        thumbnailUrl:
-          'https://images.unsplash.com/photo-1555529386-643b1a3da184?w=300',
-        caption: 'Traditional market',
-      },
-    ],
+    photos: [],
   },
   {
     name: 'Dar El Harissa Art Gallery',
@@ -92,14 +64,7 @@ const mockLocations = [
     longitude: 10.1878,
     address: 'Rue Sidi Hassine',
     city: 'Tunis',
-    photos: [
-      {
-        url: 'https://images.unsplash.com/photo-1561214115-6beb64dc405e?w=800',
-        thumbnailUrl:
-          'https://images.unsplash.com/photo-1561214115-6beb64dc405e?w=300',
-        caption: 'Art gallery exhibition',
-      },
-    ],
+    photos: [],
   },
   {
     name: 'El Barth Traditional Restaurant',
@@ -110,14 +75,7 @@ const mockLocations = [
     longitude: 10.1799,
     address: 'Rue Jamaa el Zitouna',
     city: 'Tunis',
-    photos: [
-      {
-        url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
-        thumbnailUrl:
-          'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300',
-        caption: 'Restaurant dining area',
-      },
-    ],
+    photos: [],
   },
   {
     name: 'La Goulette Seaside Walk',
@@ -128,14 +86,7 @@ const mockLocations = [
     longitude: 10.3152,
     address: 'Waterfront',
     city: 'La Goulette',
-    photos: [
-      {
-        url: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800',
-        thumbnailUrl:
-          'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=300',
-        caption: 'Seaside promenade',
-      },
-    ],
+    photos: [],
   },
   {
     name: 'Sidi Bou Said Blue Town',
@@ -146,14 +97,7 @@ const mockLocations = [
     longitude: 10.3553,
     address: 'Main Avenue',
     city: 'Sidi Bou Said',
-    photos: [
-      {
-        url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-        thumbnailUrl:
-          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300',
-        caption: 'Blue and white architecture',
-      },
-    ],
+    photos: [],
   },
 ];
 
@@ -173,8 +117,8 @@ async function seed(configService: ConfigService) {
     await dataSource.initialize();
     console.log('Database connection established');
 
+    const fileRepository = dataSource.getRepository(MediaFile);
     const locationRepository = dataSource.getRepository(Location);
-    const photoRepository = dataSource.getRepository(Photo);
     const userRepository = dataSource.getRepository(User);
     const commentRepository = dataSource.getRepository(Comment);
     const ratingRepository = dataSource.getRepository(Rating);
@@ -186,7 +130,7 @@ async function seed(configService: ConfigService) {
     await dataSource.createQueryBuilder().delete().from(Comment).execute();
     await dataSource.createQueryBuilder().delete().from(Rating).execute();
     await dataSource.createQueryBuilder().delete().from(Favorite).execute();
-    await dataSource.createQueryBuilder().delete().from(Photo).execute();
+    await dataSource.createQueryBuilder().delete().from(MediaFile).execute();
     await dataSource.createQueryBuilder().delete().from(Location).execute();
     await dataSource.createQueryBuilder().delete().from(Follower).execute();
     await dataSource.createQueryBuilder().delete().from(User).execute();
@@ -223,6 +167,7 @@ async function seed(configService: ConfigService) {
     });
     await userRepository.save(user3);
     console.log('✓ Created additional test users');
+    
 
     for (const locationData of mockLocations) {
       const { photos, ...locationFields } = locationData;
@@ -230,15 +175,6 @@ async function seed(configService: ConfigService) {
       const location = locationRepository.create(locationFields);
 
       const savedLocation = await locationRepository.save(location);
-
-      for (const photoData of photos) {
-        const photo = photoRepository.create({
-          ...photoData,
-          location: savedLocation,
-        });
-
-        await photoRepository.save(photo);
-      }
 
       console.log(`✓ Added location: ${location.name}`);
     }
