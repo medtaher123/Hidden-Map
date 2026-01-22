@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { User } from '../models/location.model';
+import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class FollowersService {
@@ -35,4 +36,9 @@ export class FollowersService {
       `${this.api}/users/${userId}/follow/following`
     );
   }
+    isFollowing(userId: string, followerUserId: string): Observable<boolean> {
+    return this.http.get<boolean>(
+      `${this.api}/users/${userId}/follow/is-following/${followerUserId}`
+    );
+    }
 }

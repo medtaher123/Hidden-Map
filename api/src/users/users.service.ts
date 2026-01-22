@@ -58,7 +58,7 @@ export class UsersService {
 
     return {
       id: user.id,
-      name: user.name,
+      username: user.name,
       bio: user.bio,
       avatarUrl: user.avatarUrl,
       followersCount: user.followers?.length || 0,

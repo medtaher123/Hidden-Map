@@ -13,7 +13,6 @@ export class FollowersController {
   ) {
     return this.followersService.create({
       ...createFollowerDto,
-      userId,
     });
   }
 
@@ -33,6 +32,14 @@ export class FollowersController {
   @Get('following')
   getFollowing(@Param('userId') userId: string) {
     return this.followersService.getFollowing(userId);
+  }
+
+  @Get('is-following/:followerUserId')
+  isFollowing(
+    @Param('userId') userId: string,
+    @Param('followerUserId') followerUserId: string,
+  ) {
+    return this.followersService.isFollowing(userId, followerUserId);
   }
 }
 
