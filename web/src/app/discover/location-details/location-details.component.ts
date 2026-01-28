@@ -1,15 +1,17 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnChanges, OnDestroy, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Location, Comment, Rating, LOCATION_CATEGORIES } from '../../shared/models/location.model';
+import { RouterLink } from '@angular/router';
+import { Location, Comment, Rating, LOCATION_CATEGORIES, User } from '../../shared/models/location.model';
 import { RatingsService } from '../../shared/services/ratings.service';
 import { CommentsService } from '../../shared/services/comments.service';
 import { FavoritesService } from '../../shared/services/favorites.service';
 import { AuthService } from '../../auth/services/auth.service';
-import { Subject, takeUntil, catchError, of } from 'rxjs';
+import { Subject, takeUntil, catchError, of, forkJoin } from 'rxjs';
+import { UsersService } from '../../shared/services/users.service';
 
 @Component({
   selector: 'app-location-details',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './location-details.component.html',
   styleUrl: './location-details.component.css',
 })
@@ -18,12 +20,14 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();
   @Output() favoriteChanged = new EventEmitter<{ locationId: string; isFavorite: boolean }>();
+  submittingUser: User | null = null;
 
   ratingsService = inject(RatingsService);
   commentsService = inject(CommentsService);
   favoritesService = inject(FavoritesService);
   private authService = inject(AuthService);
   private destroy$ = new Subject<void>();
+  private userservice = inject(UsersService);
 
   currentPhotoIndex = signal(0);
   userRating = signal(0);
@@ -74,6 +78,60 @@ export class LocationDetailsComponent implements OnInit, OnChanges, OnDestroy {
 
     const locationId = this.location.id;
 
+    // Load all data in parallel using forkJoin for better performance
+    this.isLoadingRatings.set(true);
+    this.isLoadingComments.set(true);
+
+    forkJoin({
+      ratings: this.ratingsService.getRatings(locationId).pipe(
+        catchError(err => {
+          console.error('Error loading ratings:', err);
+          return of([]);
+        })
+      ),
+      comments: this.commentsService.getComments(locationId).pipe(
+        catchError(err => {
+          console.error('Error loading comments:', err);
+          return of([]);
+        })
+      ),
+      isFavorite: this.authService.isAuthenticated()
+        ? this.favoritesService.isFavorite(locationId).pipe(
+            catchError(err => {
+              console.error('Error checking favorite status:', err);
+              return of(false);
+            })
+          )
+        : of(false)
+      ,
+      submittingUser: this.userservice.getUser(this.location.submittedById || '').pipe(
+        catchError(err => {
+          console.error('Error loading submitting user:', err);
+          return of(null);
+        })
+      )
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: ({ ratings, comments, isFavorite, submittingUser }) => {
+        this.submittingUser = submittingUser;
+        this.ratings.set(ratings);
+        const userId = this.currentUserId();
+        const userRatingObj = userId ? ratings.find(r => r.user.id === userId) : null;
+        this.userRating.set(userRatingObj?.rating || 0);
+        this.isLoadingRatings.set(false);
+
+        this.comments.set(comments);
+        this.isLoadingComments.set(false);
+
+        this.favoriteStatus.set(isFavorite);
+      },
+      error: (err) => {
+        console.error('Error loading location data:', err);
+        this.isLoadingRatings.set(false);
+        this.isLoadingComments.set(false);
+      }
+    });
     this.ratingsService.setLocationId(locationId);
     this.commentsService.setLocationId(locationId);
     this.favoritesService.setLocationId(locationId);

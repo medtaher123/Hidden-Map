@@ -21,6 +21,7 @@ const mockLocations = [
     longitude: 10.1756,
     address: 'Rue des Teinturiers',
     city: 'Tunis',
+    submittedById: '00000000-0000-0000-0000-000000000001',
     photos: [
       {
         url: 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800',
@@ -39,6 +40,7 @@ const mockLocations = [
     longitude: 10.1839,
     address: 'Rue de Rome',
     city: 'Tunis',
+    submittedById: '00000000-0000-0000-0000-000000000001',
     photos: [
       {
         url: 'https://images.unsplash.com/photo-1564399579945-7ce172fef407?w=800',
@@ -57,6 +59,7 @@ const mockLocations = [
     longitude: 10.1753,
     address: 'Montfleury',
     city: 'Tunis',
+    submittedById: '00000000-0000-0000-0000-000000000001',
     photos: [
       {
         url: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800',
@@ -93,6 +96,7 @@ const mockLocations = [
     longitude: 10.1878,
     address: 'Rue Sidi Hassine',
     city: 'Tunis',
+    submittedById: '00000000-0000-0000-0000-000000000001',
     photos: [
       {
         url: 'https://images.unsplash.com/photo-1561214115-6beb64dc405e?w=800',
@@ -111,6 +115,7 @@ const mockLocations = [
     longitude: 10.1799,
     address: 'Rue Jamaa el Zitouna',
     city: 'Tunis',
+    submittedById: '00000000-0000-0000-0000-000000000001',
     photos: [
       {
         url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
@@ -129,6 +134,7 @@ const mockLocations = [
     longitude: 10.3152,
     address: 'Waterfront',
     city: 'La Goulette',
+    submittedById: '00000000-0000-0000-0000-000000000001',
     photos: [
       {
         url: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800',
@@ -147,6 +153,7 @@ const mockLocations = [
     longitude: 10.3553,
     address: 'Main Avenue',
     city: 'Sidi Bou Said',
+    submittedById: '00000000-0000-0000-0000-000000000001',
     photos: [
       {
         url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',

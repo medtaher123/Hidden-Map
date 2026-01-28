@@ -41,6 +41,7 @@ export interface Location {
   comments?: Comment[];
   averageRating?: number;
   isFavorite?: boolean;
+  submittedById?: string;
 }
 
 export interface LocationsResponse {
