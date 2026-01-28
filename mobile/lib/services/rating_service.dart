@@ -1,62 +1,58 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../config/constants.dart';
 import '../models/rating.dart';
 
 class RatingService {
   final Dio _dio;
-  String? _token;
+  final String? _token;
 
-  RatingService()
-      : _dio = Dio(
+  RatingService({String? token})
+      : _token = token,
+        _dio = Dio(
           BaseOptions(
             baseUrl: ApiConstants.baseUrl,
             connectTimeout: const Duration(seconds: 5),
             receiveTimeout: const Duration(seconds: 3),
           ),
         ) {
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          if (_token == null) {
-            final prefs = await SharedPreferences.getInstance();
-            _token = prefs.getString('auth_token');
-          }
-          if (_token != null) {
-            options.headers['Authorization'] = 'Bearer $_token';
-          }
-          return handler.next(options);
-        },
-      ),
-    );
+    if (_token != null) {
+      _dio.options.headers['Authorization'] = 'Bearer $_token';
+    }
   }
 
   Future<List<Rating>> getRatingsByLocation(String locationId) async {
     try {
-      final response = await _dio.get('/locations/$locationId/ratings');
+      final response = await _dio.get(ApiConstants.ratingsEndpoint(locationId));
       final List<dynamic> data = response.data as List<dynamic>;
       return data.map((json) => Rating.fromJson(json as Map<String, dynamic>)).toList();
-    } catch (e) {
-      throw Exception('Failed to load ratings: $e');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == HttpStatus.unauthorized) {
+        throw Exception('Unauthorized - Please login');
+      }
+      throw Exception('Failed to load ratings: ${e.message}');
     }
   }
 
   Future<double> getAverageRating(String locationId) async {
     try {
-      final response = await _dio.get('/locations/$locationId/ratings/average');
+      final response = await _dio.get(ApiConstants.averageRatingEndpoint(locationId));
       if (response.data is num) {
         return (response.data as num).toDouble();
       }
       return 0.0;
-    } catch (e) {
-      throw Exception('Failed to load average rating: $e');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == HttpStatus.unauthorized) {
+        throw Exception('Unauthorized - Please login');
+      }
+      throw Exception('Failed to load average rating: ${e.message}');
     }
   }
 
   Future<Rating?> rateLocation(String locationId, int rating) async {
     try {
       final response = await _dio.post(
-        '/locations/$locationId/ratings',
+        ApiConstants.ratingsEndpoint(locationId),
         data: {'rating': rating},
       );
       try {
@@ -68,22 +64,30 @@ class RatingService {
         throw parseError;
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == HttpStatus.unauthorized) {
+        throw Exception('Unauthorized - Please login');
+      }
       throw Exception('Failed to rate location: ${e.message}');
-    } catch (e) {
-      throw Exception('Failed to rate location: $e');
     }
   }
 
-  Future<int?> getUserRating(String locationId) async {
+  Future<int?> getUserRating(String locationId, String? userId) async {
+    if (userId == null) return null;
+    
     try {
       final ratings = await getRatingsByLocation(locationId);
-      // we should have an endpoint that returns just the current user's rating
-      if (ratings.isNotEmpty) {
-        return ratings.first.rating;
-      }
-      return null;
+      final userRating = ratings.firstWhere(
+        (rating) => rating.user?.id == userId,
+        orElse: () => Rating(
+          id: '',
+          rating: 0,
+          locationId: locationId,
+          createdAt: DateTime.now(),
+        ),
+      );
+      
+      return userRating.id.isEmpty ? null : userRating.rating;
     } catch (e) {
-      print('Failed to get user rating: $e');
       return null;
     }
   }

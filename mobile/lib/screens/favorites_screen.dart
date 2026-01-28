@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/location.dart';
+import '../providers/auth_provider.dart';
 import '../services/favorite_service.dart';
 import '../widgets/location_details_sheet.dart';
 
@@ -11,7 +13,6 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  final FavoriteService _favoriteService = FavoriteService();
   List<Location> _favorites = [];
   bool _isLoading = true;
   String? _error;
@@ -29,7 +30,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     });
 
     try {
-      final favorites = await _favoriteService.getUserFavorites();
+      final authProvider = context.read<AuthProvider>();
+      final favoriteService = FavoriteService(token: authProvider.token);
+      final favorites = await favoriteService.getUserFavorites();
       setState(() {
         _favorites = favorites;
         _isLoading = false;
@@ -47,10 +50,41 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => LocationDetailsSheet(location: location),
-    ).then((_) {
-      _loadFavorites();
-    });
+      builder: (context) => LocationDetailsSheet(
+        location: location,
+        initialIsFavorite: true, 
+        onFavoriteToggled: _loadFavorites, 
+      ),
+    );
+  }
+
+  Future<void> _removeFavorite(Location location) async {
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final favoriteService = FavoriteService(token: authProvider.token);
+      
+      await favoriteService.removeFavorite(location.id);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Removed ${location.name} from favorites'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      
+      await _loadFavorites();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to remove favorite: ${e.toString().replaceFirst('Exception: ', '')}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -147,9 +181,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                                     ),
                                 ],
                               ),
-                              trailing: const Icon(
-                                Icons.favorite,
-                                color: Colors.red,
+                              trailing: IconButton(
+                                icon: const Icon(
+                                  Icons.favorite,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () => _removeFavorite(location),
+                                tooltip: 'Remove from favorites',
                               ),
                               onTap: () => _showLocationDetails(location),
                             ),

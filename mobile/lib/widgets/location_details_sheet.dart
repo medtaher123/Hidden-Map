@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/location.dart';
 import '../models/rating.dart';
 import '../models/comment.dart';
+import '../providers/auth_provider.dart';
 import '../services/rating_service.dart';
 import '../services/comment_service.dart';
 import '../services/favorite_service.dart';
 
 class LocationDetailsSheet extends StatefulWidget {
   final Location location;
+  final bool? initialIsFavorite;
+  final VoidCallback? onFavoriteToggled;
 
-  const LocationDetailsSheet({super.key, required this.location});
+  const LocationDetailsSheet({
+    super.key,
+    required this.location,
+    this.initialIsFavorite,
+    this.onFavoriteToggled,
+  });
 
   @override
   State<LocationDetailsSheet> createState() => _LocationDetailsSheetState();
 }
 
 class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
-  final RatingService _ratingService = RatingService();
-  final CommentService _commentService = CommentService();
-  final FavoriteService _favoriteService = FavoriteService();
-
   List<Rating> _ratings = [];
   List<Comment> _comments = [];
   bool _isFavorite = false;
@@ -32,6 +37,10 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialIsFavorite != null) {
+      _isFavorite = widget.initialIsFavorite!;
+      _isLoadingFavorite = false;
+    }
     _loadData();
   }
 
@@ -51,8 +60,13 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
 
   Future<void> _loadRatings() async {
     try {
-      final ratings = await _ratingService.getRatingsByLocation(widget.location.id);
-      final userRating = await _ratingService.getUserRating(widget.location.id);
+      final authProvider = context.read<AuthProvider>();
+      final ratingService = RatingService(token: authProvider.token);
+      final ratings = await ratingService.getRatingsByLocation(widget.location.id);
+      final userRating = await ratingService.getUserRating(
+        widget.location.id,
+        authProvider.currentUser?.id,
+      );
       
       setState(() {
         _ratings = ratings;
@@ -71,7 +85,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
 
   Future<void> _loadComments() async {
     try {
-      final comments = await _commentService.getCommentsByLocation(widget.location.id);
+      final authProvider = context.read<AuthProvider>();
+      final commentService = CommentService(token: authProvider.token);
+      final comments = await commentService.getCommentsByLocation(widget.location.id);
       setState(() {
         _comments = comments;
         _isLoadingComments = false;
@@ -87,8 +103,14 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
   }
 
   Future<void> _loadFavoriteStatus() async {
+    if (widget.initialIsFavorite != null) {
+      return;
+    }
+    
     try {
-      final isFavorite = await _favoriteService.isFavorite(widget.location.id);
+      final authProvider = context.read<AuthProvider>();
+      final favoriteService = FavoriteService(token: authProvider.token);
+      final isFavorite = await favoriteService.isFavorite(widget.location.id);
       setState(() {
         _isFavorite = isFavorite;
         _isLoadingFavorite = false;
@@ -99,33 +121,21 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
   }
 
   Future<void> _toggleFavorite() async {
-    print('Toggle clicked. Current state: _isFavorite=$_isFavorite');
+    final wasAlreadyFavorite = _isFavorite;
     
-    final currentState = _isFavorite;
-    final shouldRemove = currentState; // If currently favorited, we should remove
-    final shouldAdd = !currentState; // If not favorited, we should add
-    
-    print('Action to perform: ${shouldRemove ? "REMOVE" : "ADD"}');
-    
-    setState(() => _isFavorite = !currentState);
+    setState(() => _isFavorite = !wasAlreadyFavorite);
     
     try {
-      if (shouldRemove) {
-        print('Calling removeFavorite...');
-        await _favoriteService.removeFavorite(widget.location.id);
-        print('removeFavorite completed');
-      } else if (shouldAdd) {
-        print('Calling addFavorite...');
-        await _favoriteService.addFavorite(widget.location.id);
-        print('addFavorite completed');
+      final authProvider = context.read<AuthProvider>();
+      final favoriteService = FavoriteService(token: authProvider.token);
+      
+      if (wasAlreadyFavorite) {
+        await favoriteService.removeFavorite(widget.location.id);
+      } else {
+        await favoriteService.addFavorite(widget.location.id);
       }
       
-      // Verify the actual state from backend
-      print('Verifying state from backend...');
-      final actualState = await _favoriteService.isFavorite(widget.location.id);
-      print('Backend state: $actualState');
-      
-      setState(() => _isFavorite = actualState);
+      widget.onFavoriteToggled?.call();
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -136,12 +146,11 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
         );
       }
     } catch (e) {
-      print('Toggle favorite error: $e');
-      setState(() => _isFavorite = currentState);
+      setState(() => _isFavorite = wasAlreadyFavorite);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update favorite'),
+            content: Text('Failed to update favorite: ${e.toString().replaceFirst('Exception: ', '')}'),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -151,7 +160,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
 
   Future<void> _submitRating(int rating) async {
     try {
-      await _ratingService.rateLocation(widget.location.id, rating);
+      final authProvider = context.read<AuthProvider>();
+      final ratingService = RatingService(token: authProvider.token);
+      await ratingService.rateLocation(widget.location.id, rating);
       setState(() => _userRating = rating);
       await _loadRatings();
       if (mounted) {
@@ -172,7 +183,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
     if (_commentController.text.trim().isEmpty) return;
 
     try {
-      await _commentService.addComment(widget.location.id, _commentController.text.trim());
+      final authProvider = context.read<AuthProvider>();
+      final commentService = CommentService(token: authProvider.token);
+      await commentService.addComment(widget.location.id, _commentController.text.trim());
       _commentController.clear();
       await _loadComments();
       if (mounted) {
