@@ -84,21 +84,21 @@
         </div>
       }
     </div>
-    @if (submittingUser) {
+    @if (submittingUser()) {
   <div class="px-4 pt-3 pb-2 border-b border-gray-100">
     <a 
-      [routerLink]="['/profile', submittingUser.id]" 
+      [routerLink]="['/profile', submittingUser()!.id]" 
       class="flex items-center gap-2 w-fit hover:bg-gray-50 rounded-lg px-2 py-1.5 -ml-2 transition-colors group"
     >
       <img 
-        [src]="submittingUser.avatarUrl" 
-        [alt]="submittingUser.name"
+        [src]="submittingUser()!.avatarUrl" 
+        [alt]="submittingUser()!.name"
         class="w-7 h-7 rounded-full object-cover border border-gray-200"
       />
       <div class="flex items-center gap-1.5">
         <span class="text-xs text-gray-500">Added by</span>
         <span class="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-          {{ submittingUser.name }}
+          {{ submittingUser()!.name }}
         </span>
       </div>
       <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
