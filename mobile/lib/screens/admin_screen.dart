@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../services/admin_service.dart';
 import '../services/auth_service.dart';
+import '../config/constants.dart';
 import '../models/location.dart';
 import '../models/user.dart';
 import '../providers/auth_provider.dart';
@@ -240,19 +241,27 @@ class _AdminScreenState extends State<AdminScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
+          // Images
           if (location.photos.isNotEmpty)
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(12),
               ),
-              child: Image.network(
-                location.photos.first.url,
+              child: SizedBox(
                 height: 200,
                 width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildPlaceholder(),
+                child: PageView.builder(
+                  itemCount: location.photos.length,
+                  itemBuilder: (context, index) {
+                    final photo = location.photos[index];
+                    return Image.network(
+                      ApiConstants.resolveImageUrl(photo.url),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildPlaceholder(),
+                    );
+                  },
+                ),
               ),
             )
           else

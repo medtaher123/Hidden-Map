@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config/constants.dart';
 import '../models/location.dart';
 import '../models/rating.dart';
 import '../models/comment.dart';
@@ -33,6 +34,8 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
   bool _isLoadingFavorite = true;
   int? _userRating;
   final TextEditingController _commentController = TextEditingController();
+  PageController? _photoPageController;
+  int _currentPhotoIndex = 0;
 
   @override
   void initState() {
@@ -41,11 +44,15 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
       _isFavorite = widget.initialIsFavorite!;
       _isLoadingFavorite = false;
     }
+    if (widget.location.photos.isNotEmpty) {
+      _photoPageController = PageController();
+    }
     _loadData();
   }
 
   @override
   void dispose() {
+    _photoPageController?.dispose();
     _commentController.dispose();
     super.dispose();
   }
@@ -239,18 +246,108 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
                   if (widget.location.photos.isNotEmpty)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        widget.location.photos.first.url,
+                      child: SizedBox(
                         height: 200,
                         width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 200,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image_not_supported, size: 48),
-                          );
-                        },
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            PageView.builder(
+                              controller: _photoPageController,
+                              itemCount: widget.location.photos.length,
+                              onPageChanged: (index) {
+                                setState(() => _currentPhotoIndex = index);
+                              },
+                              itemBuilder: (context, index) {
+                                final photo = widget.location.photos[index];
+                                return Image.network(
+                                  ApiConstants.resolveImageUrl(photo.url),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.image_not_supported, size: 48),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                            if (widget.location.photos.length > 1) ...[
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                child: Center(
+                                  child: IconButton(
+                                    onPressed: _currentPhotoIndex > 0
+                                        ? () {
+                                            _photoPageController?.previousPage(
+                                              duration: const Duration(milliseconds: 300),
+                                              curve: Curves.easeInOut,
+                                            );
+                                          }
+                                        : null,
+                                    icon: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.5),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.chevron_left, color: Colors.white, size: 28),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                bottom: 0,
+                                child: Center(
+                                  child: IconButton(
+                                    onPressed: _currentPhotoIndex < widget.location.photos.length - 1
+                                        ? () {
+                                            _photoPageController?.nextPage(
+                                              duration: const Duration(milliseconds: 300),
+                                              curve: Curves.easeInOut,
+                                            );
+                                          }
+                                        : null,
+                                    icon: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.5),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.chevron_right, color: Colors.white, size: 28),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 8,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(
+                                    widget.location.photos.length,
+                                    (index) => Container(
+                                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: _currentPhotoIndex == index
+                                            ? Colors.white
+                                            : Colors.white.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                   Positioned(

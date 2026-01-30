@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../config/constants.dart';
 import '../models/location.dart';
 import '../providers/auth_provider.dart';
 import '../services/favorite_service.dart';
@@ -142,30 +143,51 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           return Card(
                             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             child: ListTile(
-                              leading: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: location.photos.isNotEmpty
-                                    ? Image.network(
-                                        location.photos.first.url,
-                                        width: 60,
-                                        height: 60,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Container(
-                                            width: 60,
-                                            height: 60,
-                                            color: Colors.grey[300],
-                                            child: const Icon(Icons.image_not_supported),
+                              leading: location.photos.isNotEmpty
+                                  ? SizedBox(
+                                      width: 80,
+                                      height: 60,
+                                      child: ListView.separated(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: location.photos.length,
+                                        separatorBuilder: (_, __) =>
+                                            const SizedBox(width: 4),
+                                        itemBuilder: (context, index) {
+                                          final photo =
+                                              location.photos[index];
+                                          return ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            child: Image.network(
+                                              ApiConstants.resolveImageUrl(
+                                                  photo.url),
+                                              width: 60,
+                                              height: 60,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context,
+                                                  error, stackTrace) {
+                                                return Container(
+                                                  width: 60,
+                                                  height: 60,
+                                                  color: Colors.grey[300],
+                                                  child: const Icon(
+                                                      Icons.image_not_supported),
+                                                );
+                                              },
+                                            ),
                                           );
                                         },
-                                      )
-                                    : Container(
+                                      ),
+                                    )
+                                  : ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Container(
                                         width: 60,
                                         height: 60,
                                         color: Colors.grey[300],
                                         child: const Icon(Icons.location_on),
                                       ),
-                              ),
+                                    ),
                               title: Text(
                                 location.name,
                                 style: const TextStyle(fontWeight: FontWeight.bold),

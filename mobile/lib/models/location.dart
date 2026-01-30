@@ -1,5 +1,5 @@
-import 'photo.dart';
 import 'location_category.dart';
+import 'media_file.dart';
 
 class Location {
   final String id;
@@ -10,7 +10,7 @@ class Location {
   final double longitude;
   final String address;
   final String city;
-  final List<Photo> photos;
+  final List<MediaFile> photos;
 
   Location({
     required this.id,
@@ -25,6 +25,17 @@ class Location {
   });
 
   factory Location.fromJson(Map<String, dynamic> json) {
+    final photosRaw = json['photos'] as List<dynamic>?;
+    final photosList = photosRaw == null
+        ? <MediaFile>[]
+        : photosRaw
+            .map((e) {
+              if (e is! Map) return null;
+              return MediaFile.fromJson(Map<String, dynamic>.from(e));
+            })
+            .whereType<MediaFile>()
+            .toList();
+
     return Location(
       id: json['id'].toString(),
       name: json['name'] as String,
@@ -37,10 +48,7 @@ class Location {
       longitude: double.parse(json['longitude'].toString()),
       address: json['address'] as String,
       city: json['city'] as String,
-      photos: (json['photos'] as List<dynamic>?)
-              ?.map((p) => Photo.fromJson(p as Map<String, dynamic>))
-              .toList() ??
-          [],
+      photos: photosList,
     );
   }
 
@@ -53,7 +61,7 @@ class Location {
       'longitude': longitude,
       'address': address,
       'city': city,
-      'photos': photos.map((p) => p.toJson()).toList(),
+      'photos': photos.map((p) => p.id).toList(),
     };
   }
 }
