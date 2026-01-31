@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,6 +18,7 @@ import {
 import { LocationsService } from '../service/locations.service';
 import { CreateLocationDto } from '../dto/create-location.dto';
 import { UpdateLocationDto } from '../dto/update-location.dto';
+import { GetLocationsByBoundsDto } from '../dto/get-locations-by-bounds.dto';
 import { Public } from '../../auth/decorators/public.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { User } from '../../users/entities/user.entity';
@@ -28,13 +30,37 @@ export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
 
   @Public()
-  @ApiOperation({ summary: 'Get all locations' })
+  @ApiOperation({ summary: 'Get all locations or filter by bounds' })
   @ApiResponse({
     status: 200,
-    description: 'Returns all locations with photos',
+    description: 'Returns all locations or locations within bounds with photos',
   })
   @Get()
-  getAllLocations() {
+  getAllLocations(@Query() boundsDto: GetLocationsByBoundsDto) {
+    // If bounds are provided, filter by them
+    if (
+      boundsDto.minLat !== undefined &&
+      boundsDto.maxLat !== undefined &&
+      boundsDto.minLng !== undefined &&
+      boundsDto.maxLng !== undefined
+    ) {
+      // Validate that min < max
+      if (boundsDto.minLat >= boundsDto.maxLat) {
+        throw new Error('minLat must be less than maxLat');
+      }
+      if (boundsDto.minLng >= boundsDto.maxLng) {
+        throw new Error('minLng must be less than maxLng');
+      }
+
+      return this.locationsService.findByBounds(
+        boundsDto.minLat,
+        boundsDto.maxLat,
+        boundsDto.minLng,
+        boundsDto.maxLng,
+      );
+    }
+
+    // Otherwise return all locations
     return this.locationsService.findAll();
   }
 

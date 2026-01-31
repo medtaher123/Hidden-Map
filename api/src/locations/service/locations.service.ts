@@ -23,6 +23,20 @@ export class LocationsService {
     return this.locationRepository.find({ relations: ['photos'] });
   }
 
+  findByBounds(
+    minLat: number,
+    maxLat: number,
+    minLng: number,
+    maxLng: number,
+  ): Promise<Location[]> {
+    return this.locationRepository
+      .createQueryBuilder('location')
+      .where('location.latitude BETWEEN :minLat AND :maxLat', { minLat, maxLat })
+      .andWhere('location.longitude BETWEEN :minLng AND :maxLng', { minLng, maxLng })
+      .leftJoinAndSelect('location.photos', 'photos')
+      .getMany();
+  }
+
   findOne(id: string): Promise<Location | null> {
     return this.locationRepository.findOne({
       where: { id },

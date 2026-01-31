@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../models/location.dart';
 import '../providers/locations_provider.dart';
 import '../widgets/location_details_sheet.dart';
@@ -16,12 +17,41 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   static const LatLng _tunis = LatLng(36.8065, 10.1815);
+  Timer? _debounceTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LocationsProvider>().loadLocations();
+      // Load initial locations for the default view
+      _loadLocationsForCurrentViewport();
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  void _loadLocationsForCurrentViewport() {
+    final bounds = _mapController.camera.visibleBounds;
+    
+    context.read<LocationsProvider>().loadLocationsByViewport(
+      minLat: bounds.south,
+      maxLat: bounds.north,
+      minLng: bounds.west,
+      maxLng: bounds.east,
+    );
+  }
+
+  void _onMapMoved() {
+    // Cancel the previous debounce timer if it exists
+    _debounceTimer?.cancel();
+    
+    // Create a new timer
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _loadLocationsForCurrentViewport();
     });
   }
 
@@ -112,7 +142,12 @@ class _MapScreenState extends State<MapScreen> {
                   initialZoom: 12,
                   minZoom: 5,
                   maxZoom: 18,
-                ),
+                  onPositionChanged: (position, bool hasGesture) {
+                    if (hasGesture) {
+                      _onMapMoved();
+                    }
+                  },
+                ),  
                 children: [
                   TileLayer(
                     urlTemplate:

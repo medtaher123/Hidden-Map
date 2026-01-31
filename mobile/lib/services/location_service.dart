@@ -30,6 +30,31 @@ class LocationService {
     }
   }
 
+  Future<List<Location>> getLocationsByBounds({
+    required double minLat,
+    required double maxLat,
+    required double minLng,
+    required double maxLng,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.locationsEndpoint,
+        queryParameters: {
+          'minLat': minLat,
+          'maxLat': maxLat,
+          'minLng': minLng,
+          'maxLng': maxLng,
+        },
+      );
+      final List<dynamic> data = response.data as List<dynamic>;
+      return data
+          .map((json) => Location.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw Exception('Failed to load locations: ${e.message}');
+    }
+  }
+
   Future<Location> createLocation(Location location) async {
     try {
       final response = await _dio.post(
