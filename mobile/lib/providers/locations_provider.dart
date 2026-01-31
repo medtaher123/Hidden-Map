@@ -10,19 +10,35 @@ class LocationsProvider extends ChangeNotifier {
     _token = token;
     _locationService = LocationService(token: token);
   }
-  
-  List<Location> _locations = [];
+
+  final List<Location> _locations = [];
   bool _isLoading = false;
   String? _error;
-  
-  // Track viewport bounds and loaded areas
-  double? _minLat;
-  double? _maxLat;
-  double? _minLng;
-  double? _maxLng;
+
+  // Grid-based coverage tracking to avoid redundant requests
+  // Each cell is a small lat/lng rectangle identified by integer indices
+  static const double _cellSize = 0.05; // degrees (~5km) - tune as needed
   final Set<String> _loadedCells = {};
 
-  List<Location> get locations => _locations;
+  String _cellKey(int latIndex, int lngIndex) => '$latIndex:$lngIndex';
+
+  Set<String> _cellsForBounds(
+      double minLat, double maxLat, double minLng, double maxLng) {
+    final Set<String> cells = {};
+    final latStart = (minLat / _cellSize).floor();
+    final latEnd = (maxLat / _cellSize).floor();
+    final lngStart = (minLng / _cellSize).floor();
+    final lngEnd = (maxLng / _cellSize).floor();
+
+    for (var i = latStart; i <= latEnd; i++) {
+      for (var j = lngStart; j <= lngEnd; j++) {
+        cells.add(_cellKey(i, j));
+      }
+    }
+    return cells;
+  }
+
+  List<Location> get locations => List.unmodifiable(_locations);
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -33,7 +49,11 @@ class LocationsProvider extends ChangeNotifier {
 
     try {
       _locationService ??= LocationService(token: _token);
-      _locations = await _locationService!.getLocations();
+      final fetched = await _locationService!.getLocations();
+      _locations.clear();
+      _locations.addAll(fetched);
+      // Reset loaded cells when doing a full load
+      _loadedCells.clear();
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -62,13 +82,13 @@ class LocationsProvider extends ChangeNotifier {
     final bufferedMinLng = minLng - lngBuffer;
     final bufferedMaxLng = maxLng + lngBuffer;
 
-    // Create a cell key to track loaded areas and avoid duplicate requests
-    final cellKey = '${bufferedMinLat.toStringAsFixed(2)}_${bufferedMaxLat.toStringAsFixed(2)}_${bufferedMinLng.toStringAsFixed(2)}_${bufferedMaxLng.toStringAsFixed(2)}';
+    // Compute which grid cells cover the buffered area
+    final requestedCells =
+        _cellsForBounds(bufferedMinLat, bufferedMaxLat, bufferedMinLng, bufferedMaxLng);
 
-    // Skip if this area has already been loaded
-    if (_loadedCells.contains(cellKey)) {
-      return;
-    }
+    // If all requested cells have been loaded already, skip the request
+    final allLoaded = requestedCells.every((c) => _loadedCells.contains(c));
+    if (allLoaded) return;
 
     _error = null;
     final wasLoading = _isLoading;
@@ -88,22 +108,17 @@ class LocationsProvider extends ChangeNotifier {
 
       // Merge new locations with existing ones (avoid duplicates)
       final existingIds = _locations.map((l) => l.id).toSet();
-      final uniqueNewLocations = newLocations.where((l) => !existingIds.contains(l.id)).toList();
-      
-      _locations.addAll(uniqueNewLocations);
-      _loadedCells.add(cellKey);
-      _minLat = bufferedMinLat;
-      _maxLat = bufferedMaxLat;
-      _minLng = bufferedMinLng;
-      _maxLng = bufferedMaxLng;
-      
+      for (final loc in newLocations) {
+        if (!existingIds.contains(loc.id)) _locations.add(loc);
+      }
+
+      // Mark all requested cells as loaded
+      _loadedCells.addAll(requestedCells);
       _error = null;
     } catch (e) {
       _error = e.toString();
     } finally {
-      if (!wasLoading) {
-        _isLoading = false;
-      }
+      if (!wasLoading) _isLoading = false;
       notifyListeners();
     }
   }
