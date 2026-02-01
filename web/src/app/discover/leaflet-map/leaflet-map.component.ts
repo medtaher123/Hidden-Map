@@ -7,6 +7,9 @@ import {
   signal,
   computed,
   NgZone,
+  ViewChild,
+  ElementRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -48,7 +51,9 @@ export class LeafletMapComponent implements AfterViewInit {
   private viewportBounds = signal<Bounds | null>(null);
   private selectedCategory = signal<string | null>(null);
 
-  
+  @ViewChild('searchContainer') searchContainer!: ElementRef;
+  showDropdown = signal(false);
+
   searchQuery = signal<string>('');
   debouncedSearch = toSignal(
     toObservable(this.searchQuery).pipe(debounceTime(500)),
@@ -346,6 +351,19 @@ export class LeafletMapComponent implements AfterViewInit {
 
   setSearchQuery(query: string) {
     this.searchQuery.set(query);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClick(event: MouseEvent) {
+    console.log("cliiickkkk", this.searchContainer);
+    if (this.searchContainer && !this.searchContainer.nativeElement.contains(event.target)) {
+      console.log("cliiickkkk outside")
+      this.showDropdown.set(false);
+    }
+  }
+
+  onSearchFocus() {
+    this.showDropdown.set(true);
   }
 
   onSearchInput(value: string) {
