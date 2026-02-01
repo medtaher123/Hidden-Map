@@ -46,5 +46,54 @@ export class LocationsService {
     );
   }
 
+  getLocationsByBounds(
+    minLat: number,
+    maxLat: number,
+    minLng: number,
+    maxLng: number
+  ): Observable<Location[]> {
+    return this.http
+      .get<Location[]>(this.apiUrl, {
+        params: {
+          minLat: minLat.toString(),
+          maxLat: maxLat.toString(),
+          minLng: minLng.toString(),
+          maxLng: maxLng.toString(),
+        },
+      })
+      .pipe(
+        retry({
+          count: 3,
+          delay: 1000,
+        }),
+        catchError((error) => {
+          console.error('Failed to load locations by bounds:', error);
+          return of([]);
+        })
+      );
+  }
+
+  searchLocations(
+    query: string,
+    category?: string
+  ): Observable<Location[]> {
+    const params: any = { query };
+    if (category) {
+      params.category = category;
+    }
+    return this.http
+      .get<Location[]>(`${this.apiUrl}/search`, { params })
+      .pipe(
+        retry({
+          count: 3,
+          delay: 1000,
+        }),
+        catchError((error) => {
+          console.error('Failed to search locations:', error);
+          return of([]);
+        })
+      );
+  }
+
   constructor() {}
 }
