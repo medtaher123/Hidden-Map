@@ -82,18 +82,6 @@ export class LeafletMapComponent implements AfterViewInit {
       );
     }
 
-    // Filter by search query
-    if (this.searchQuery()) {
-      const query = this.searchQuery().toLowerCase();
-      result = result.filter(
-        (loc) =>
-          loc.name.toLowerCase().includes(query) ||
-          loc.description.toLowerCase().includes(query) ||
-          loc.address?.toLowerCase().includes(query) ||
-          loc.city?.toLowerCase().includes(query)
-      );
-    }
-
     return result;
   });
 
