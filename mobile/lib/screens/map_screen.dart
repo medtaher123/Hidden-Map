@@ -124,6 +124,15 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
+  List<Location> _getFilteredLocations(List<Location> locations) {
+    if (_selectedCategory == null) {
+      return locations;
+    }
+    return locations
+        .where((location) => location.category == _selectedCategory)
+        .toList();
+  }
+
   List<Marker> _buildMarkers(List<Location> locations) {
     return locations.map((location) {
       return Marker(
@@ -223,7 +232,7 @@ class _MapScreenState extends State<MapScreen> {
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.example.mobile',
                   ),
-                  MarkerLayer(markers: _buildMarkers(provider.locations)),
+                  MarkerLayer(markers: _buildMarkers(_getFilteredLocations(provider.locations))),
                 ],
               ),
               // Search bar at the top
