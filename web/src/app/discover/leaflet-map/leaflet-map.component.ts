@@ -359,14 +359,12 @@ export class LeafletMapComponent implements AfterViewInit {
   }
 
   onSearchResultClick(location: Location) {
-    this._mapController?.setView([location.latitude, location.longitude], 16);
+    if (this.map) {
+      this.map.flyTo([location.latitude, location.longitude], 16, {
+        duration: 1.5,
+      });
+    }
     this.openLocationDetails(location);
     this.searchQuery.set(''); // Clear search
-  }
-
-  private _mapController: any;
-
-  ngAfterMapInit() {
-    this._mapController = this.map;
   }
 }
