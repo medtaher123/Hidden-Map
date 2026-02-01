@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/leaderboard_service.dart';
 import '../models/leaderboard_user.dart';
+import 'package:go_router/go_router.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -88,37 +89,42 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         itemCount: _users.length,
         itemBuilder: (context, index) {
           final user = _users[index];
-          return _buildUserCard(user);
+          return _buildUserCard(context, user);
         },
       ),
     );
   }
 
-  Widget _buildUserCard(LeaderboardUser user) {
+  Widget _buildUserCard(BuildContext context, LeaderboardUser user) {
     final isTopThree = user.rank <= 3;
-    
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: isTopThree ? 4 : 1,
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: _buildRankWidget(user.rank),
-        title: Row(
-          children: [
-            _buildAvatar(user),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                user.name,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+
+    return InkWell(
+      onTap: () {
+        context.push('/profile/${user.id}');
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        elevation: isTopThree ? 4 : 1,
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(16),
+          leading: _buildRankWidget(user.rank),
+          title: Row(
+            children: [
+              _buildAvatar(user),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  user.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
+          trailing: _buildPointsBadge(user.points),
         ),
-        trailing: _buildPointsBadge(user.points),
       ),
     );
   }
@@ -127,7 +133,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     if (rank == 1) return const Text('🥇', style: TextStyle(fontSize: 32));
     if (rank == 2) return const Text('🥈', style: TextStyle(fontSize: 32));
     if (rank == 3) return const Text('🥉', style: TextStyle(fontSize: 32));
-    
+
     return SizedBox(
       width: 40,
       child: Text(
@@ -145,13 +151,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         backgroundImage: NetworkImage(user.avatarUrl!),
       );
     }
-    
+
     return CircleAvatar(
       radius: 24,
       backgroundColor: Colors.blue,
       child: Text(
         user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

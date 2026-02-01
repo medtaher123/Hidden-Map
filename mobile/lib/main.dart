@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'providers/locations_provider.dart';
 import 'providers/auth_provider.dart';
+import 'services/follower_service.dart';
+import 'services/user_service.dart';
 import 'screens/map_screen.dart';
 import 'screens/submit_screen.dart';
 import 'screens/leaderboard_screen.dart';
@@ -34,6 +36,16 @@ class MyApp extends StatelessWidget {
             return locationsProvider;
           },
         ),
+        // Add UserService - provides user data fetching capabilities
+        ProxyProvider<AuthProvider, UserService>(
+          update: (_, authProvider, __) =>
+              UserService(token: authProvider.token),
+        ),
+        // Add FollowerService - provides follow/unfollow capabilities
+        ProxyProvider<AuthProvider, FollowerService>(
+          update: (_, authProvider, __) =>
+              FollowerService(getToken: () => authProvider.token),
+        ),
       ],
       child: MaterialApp.router(
         title: 'HiddenMap',
@@ -49,6 +61,7 @@ class MyApp extends StatelessWidget {
 
 final _router = GoRouter(
   initialLocation: '/',
+  debugLogDiagnostics: true,
   routes: [
     ShellRoute(
       builder: (context, state, child) {
@@ -68,9 +81,10 @@ final _router = GoRouter(
           path: '/leaderboard',
           builder: (context, state) => const LeaderboardScreen(),
         ),
+        // CHANGED: Updated '/me' route to use '/profile' for consistency
         GoRoute(
           path: '/profile',
-          builder: (context, state) => const ProfileScreen(),
+          builder: (context, _) => const ProfileScreen(),
         ),
       ],
     ),
@@ -91,6 +105,14 @@ final _router = GoRouter(
     GoRoute(
       path: '/profile/edit',
       builder: (context, state) => const EditProfileScreen(),
+    ),
+    // View other users' profiles by ID
+    GoRoute(
+      path: '/profile/:userId',
+      builder: (context, state) {
+        final userId = state.pathParameters['userId']!;
+        return ProfileScreen(userId: userId);
+      },
     ),
   ],
 );
@@ -184,7 +206,9 @@ class ScaffoldWithNavBar extends StatelessWidget {
             label: 'Discover',
           ),
           BottomNavigationBarItem(
-            icon: Icon(authProvider.isAdmin ? Icons.dashboard : Icons.add_location),
+            icon: Icon(
+              authProvider.isAdmin ? Icons.dashboard : Icons.add_location,
+            ),
             label: authProvider.isAdmin ? 'Dashboard' : 'Submit',
           ),
           const BottomNavigationBarItem(

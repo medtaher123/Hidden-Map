@@ -11,6 +11,7 @@ class Location {
   final String address;
   final String city;
   final List<MediaFile> photos;
+  final String submittedById;
 
   Location({
     required this.id,
@@ -22,6 +23,7 @@ class Location {
     required this.address,
     required this.city,
     required this.photos,
+    required this.submittedById,
   });
 
   factory Location.fromJson(Map<String, dynamic> json) {
@@ -29,12 +31,12 @@ class Location {
     final photosList = photosRaw == null
         ? <MediaFile>[]
         : photosRaw
-            .map((e) {
-              if (e is! Map) return null;
-              return MediaFile.fromJson(Map<String, dynamic>.from(e));
-            })
-            .whereType<MediaFile>()
-            .toList();
+              .map((e) {
+                if (e is! Map) return null;
+                return MediaFile.fromJson(Map<String, dynamic>.from(e));
+              })
+              .whereType<MediaFile>()
+              .toList();
 
     return Location(
       id: json['id'].toString(),
@@ -49,6 +51,7 @@ class Location {
       address: json['address'] as String,
       city: json['city'] as String,
       photos: photosList,
+      submittedById: json['submittedById']?.toString() ?? '',
     );
   }
 
@@ -62,6 +65,7 @@ class Location {
       'address': address,
       'city': city,
       'photos': photos.map((p) => p.id).toList(),
+      'submitted_by': submittedById,
     };
   }
 }

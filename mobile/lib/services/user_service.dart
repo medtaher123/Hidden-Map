@@ -47,8 +47,12 @@ class UserService {
     }
   }
 
-  // Get user profile (includes followers/following counts)
-  Future<User> getUserProfile(String id, {String? currentUserId}) async {
+  // Get user profile (includes followers/following counts and isFollowed status)
+  // Returns a tuple: (User, isFollowed)
+  Future<(User, bool)> getUserProfile(
+    String id, {
+    String? currentUserId,
+  }) async {
     try {
       final queryParams = currentUserId != null
           ? {'currentUserId': currentUserId}
@@ -58,7 +62,27 @@ class UserService {
         '${ApiConstants.usersEndpoint}/$id/profile',
         queryParameters: queryParams,
       );
-      return User.fromJson(response.data as Map<String, dynamic>);
+
+      final data = response.data as Map<String, dynamic>;
+
+      // Create a modified JSON that includes 'name' from 'username'
+      final userJson = {
+        'id': data['id'],
+        'name': data['username'], // Map username to name
+        'email': '', // Profile endpoint doesn't return email
+        'avatarUrl': data['avatarUrl'],
+        'bio': data['bio'],
+        'role': 'user', // Default role
+        'points': 0, // Profile endpoint doesn't return points
+        'followersCount': data['followersCount'],
+        'followingCount': data['followingCount'],
+        'createdAt': null,
+      };
+
+      final user = User.fromJson(userJson);
+      final isFollowed = data['isFollowed'] as bool? ?? false;
+
+      return (user, isFollowed);
     } on DioException catch (e) {
       if (e.response?.statusCode == HttpStatus.notFound) {
         throw Exception('User not found');
@@ -90,6 +114,22 @@ class UserService {
         throw Exception('User not found');
       }
       throw Exception('Failed to delete user: ${e.message}');
+    }
+  }
+
+  // Search users (optional - add if you need search functionality)
+  Future<List<User>> searchUsers(String query) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.usersEndpoint,
+        queryParameters: {'search': query},
+      );
+      final List<dynamic> data = response.data as List<dynamic>;
+      return data
+          .map((json) => User.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw Exception('Failed to search users: ${e.message}');
     }
   }
 }

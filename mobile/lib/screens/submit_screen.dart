@@ -7,8 +7,8 @@ import '../models/location_category.dart';
 import '../models/media_file.dart';
 import '../providers/locations_provider.dart';
 import '../providers/auth_provider.dart';
-import 'dart:io'; 
-import 'package:image_picker/image_picker.dart'; 
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class SubmitScreen extends StatefulWidget {
   const SubmitScreen({super.key});
@@ -98,6 +98,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
         address: _addressController.text,
         city: _cityController.text,
         photos: uploadedFiles,
+        submittedById: authProvider.currentUser!.id,
       );
 
       await context.read<LocationsProvider>().addLocation(location);
@@ -321,7 +322,10 @@ class _SubmitScreenState extends State<SubmitScreen> {
                                 ),
                                 TextButton.icon(
                                   onPressed: _pickImages,
-                                  icon: const Icon(Icons.add_photo_alternate, size: 20),
+                                  icon: const Icon(
+                                    Icons.add_photo_alternate,
+                                    size: 20,
+                                  ),
                                   label: const Text('Add more'),
                                 ),
                               ],
@@ -332,7 +336,8 @@ class _SubmitScreenState extends State<SubmitScreen> {
                               child: ListView.separated(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: _selectedImages.length,
-                                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 8),
                                 itemBuilder: (context, index) {
                                   final file = _selectedImages[index];
                                   return Stack(
@@ -363,7 +368,11 @@ class _SubmitScreenState extends State<SubmitScreen> {
                                             minWidth: 28,
                                             minHeight: 28,
                                           ),
-                                          icon: const Icon(Icons.close, color: Colors.red, size: 20),
+                                          icon: const Icon(
+                                            Icons.close,
+                                            color: Colors.red,
+                                            size: 20,
+                                          ),
                                           style: IconButton.styleFrom(
                                             backgroundColor: Colors.white,
                                           ),
@@ -380,9 +389,15 @@ class _SubmitScreenState extends State<SubmitScreen> {
                       )
                     else
                       ListTile(
-                        leading: const Icon(Icons.add_photo_alternate, size: 40, color: Colors.grey),
+                        leading: const Icon(
+                          Icons.add_photo_alternate,
+                          size: 40,
+                          color: Colors.grey,
+                        ),
                         title: const Text('Add Photos'),
-                        subtitle: const Text('Tap to select one or more from gallery'),
+                        subtitle: const Text(
+                          'Tap to select one or more from gallery',
+                        ),
                         onTap: _pickImages,
                       ),
                   ],

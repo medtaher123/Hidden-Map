@@ -17,7 +17,8 @@ class ApiConstants {
   static const String authEndpoint = '/auth';
   static const String usersEndpoint = '/users';
   static const String notificationsEndpoint = '/notifications';
-  static const String markAllNotificationsAsReadEndpoint = '/notifications/mark-all-read';
+  static const String markAllNotificationsAsReadEndpoint =
+      '/notifications/mark-all-read';
   static const String favoritesEndpoint = '/favorites';
 
   // Helper method to get approve/reject endpoints

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/services/user_service.dart';
 import 'package:provider/provider.dart';
 import '../config/constants.dart';
 import '../models/location.dart';
@@ -8,6 +9,8 @@ import '../providers/auth_provider.dart';
 import '../services/rating_service.dart';
 import '../services/comment_service.dart';
 import '../services/favorite_service.dart';
+import '../models/user.dart';
+import 'package:go_router/go_router.dart';
 
 class LocationDetailsSheet extends StatefulWidget {
   final Location location;
@@ -36,6 +39,8 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
   final TextEditingController _commentController = TextEditingController();
   PageController? _photoPageController;
   int _currentPhotoIndex = 0;
+  User? _submitter;
+  bool _isLoadingSubmitter = true;
 
   @override
   void initState() {
@@ -62,6 +67,7 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
       _loadRatings(),
       _loadComments(),
       _loadFavoriteStatus(),
+      _loadSubmitter(),
     ]);
   }
 
@@ -69,12 +75,14 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
     try {
       final authProvider = context.read<AuthProvider>();
       final ratingService = RatingService(token: authProvider.token);
-      final ratings = await ratingService.getRatingsByLocation(widget.location.id);
+      final ratings = await ratingService.getRatingsByLocation(
+        widget.location.id,
+      );
       final userRating = await ratingService.getUserRating(
         widget.location.id,
         authProvider.currentUser?.id,
       );
-      
+
       setState(() {
         _ratings = ratings;
         _userRating = userRating;
@@ -83,9 +91,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
     } catch (e) {
       setState(() => _isLoadingRatings = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load ratings: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load ratings: $e')));
       }
     }
   }
@@ -94,7 +102,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
     try {
       final authProvider = context.read<AuthProvider>();
       final commentService = CommentService(token: authProvider.token);
-      final comments = await commentService.getCommentsByLocation(widget.location.id);
+      final comments = await commentService.getCommentsByLocation(
+        widget.location.id,
+      );
       setState(() {
         _comments = comments;
         _isLoadingComments = false;
@@ -102,9 +112,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
     } catch (e) {
       setState(() => _isLoadingComments = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load comments: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load comments: $e')));
       }
     }
   }
@@ -113,7 +123,7 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
     if (widget.initialIsFavorite != null) {
       return;
     }
-    
+
     try {
       final authProvider = context.read<AuthProvider>();
       final favoriteService = FavoriteService(token: authProvider.token);
@@ -129,25 +139,27 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
 
   Future<void> _toggleFavorite() async {
     final wasAlreadyFavorite = _isFavorite;
-    
+
     setState(() => _isFavorite = !wasAlreadyFavorite);
-    
+
     try {
       final authProvider = context.read<AuthProvider>();
       final favoriteService = FavoriteService(token: authProvider.token);
-      
+
       if (wasAlreadyFavorite) {
         await favoriteService.removeFavorite(widget.location.id);
       } else {
         await favoriteService.addFavorite(widget.location.id);
       }
-      
+
       widget.onFavoriteToggled?.call();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isFavorite ? 'Added to favorites' : 'Removed from favorites'),
+            content: Text(
+              _isFavorite ? 'Added to favorites' : 'Removed from favorites',
+            ),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -157,7 +169,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update favorite: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(
+              'Failed to update favorite: ${e.toString().replaceFirst('Exception: ', '')}',
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -179,9 +193,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit rating: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to submit rating: $e')));
       }
     }
   }
@@ -192,7 +206,10 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
     try {
       final authProvider = context.read<AuthProvider>();
       final commentService = CommentService(token: authProvider.token);
-      await commentService.addComment(widget.location.id, _commentController.text.trim());
+      await commentService.addComment(
+        widget.location.id,
+        _commentController.text.trim(),
+      );
       _commentController.clear();
       await _loadComments();
       if (mounted) {
@@ -202,16 +219,42 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add comment: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add comment: $e')));
       }
     }
   }
 
   double get _averageRating {
     if (_ratings.isEmpty) return 0;
-    return _ratings.map((r) => r.rating).reduce((a, b) => a + b) / _ratings.length;
+    return _ratings.map((r) => r.rating).reduce((a, b) => a + b) /
+        _ratings.length;
+  }
+
+  Future<void> _loadSubmitter() async {
+    if (widget.location.submittedById.isEmpty) {
+      print("Submitted by ID is empty");
+      setState(() => _isLoadingSubmitter = false);
+      return;
+    }
+
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final userService = UserService(token: authProvider.token);
+
+      final user = await userService.getUserById(widget.location.submittedById);
+
+      if (mounted) {
+        print("Loaded submitter: ${user.name}, ${user.id}");
+        setState(() {
+          _submitter = user;
+          _isLoadingSubmitter = false;
+        });
+      }
+    } catch (e) {
+      setState(() => _isLoadingSubmitter = false);
+    }
   }
 
   @override
@@ -241,133 +284,166 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
                   ),
                 ),
               ),
-              Stack(
-                children: [
-                  if (widget.location.photos.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: SizedBox(
-                        height: 200,
-                        width: double.infinity,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            PageView.builder(
-                              controller: _photoPageController,
-                              itemCount: widget.location.photos.length,
-                              onPageChanged: (index) {
-                                setState(() => _currentPhotoIndex = index);
-                              },
-                              itemBuilder: (context, index) {
-                                final photo = widget.location.photos[index];
-                                return Image.network(
-                                  ApiConstants.resolveImageUrl(photo.url),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      color: Colors.grey[300],
-                                      child: const Icon(Icons.image_not_supported, size: 48),
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                            if (widget.location.photos.length > 1) ...[
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: IconButton(
-                                    onPressed: _currentPhotoIndex > 0
-                                        ? () {
-                                            _photoPageController?.previousPage(
-                                              duration: const Duration(milliseconds: 300),
-                                              curve: Curves.easeInOut,
-                                            );
-                                          }
-                                        : null,
-                                    icon: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.5),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.chevron_left, color: Colors.white, size: 28),
-                                    ),
-                                  ),
-                                ),
+              SizedBox(
+                height: 200,
+                child: Stack(
+                  children: [
+                    if (widget.location.photos.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          height: 200,
+                          width: double.infinity,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              PageView.builder(
+                                controller: _photoPageController,
+                                itemCount: widget.location.photos.length,
+                                onPageChanged: (index) {
+                                  setState(() => _currentPhotoIndex = index);
+                                },
+                                itemBuilder: (context, index) {
+                                  final photo = widget.location.photos[index];
+                                  return Image.network(
+                                    ApiConstants.resolveImageUrl(photo.url),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey[300],
+                                        child: const Icon(
+                                          Icons.image_not_supported,
+                                          size: 48,
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
                               ),
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: IconButton(
-                                    onPressed: _currentPhotoIndex < widget.location.photos.length - 1
-                                        ? () {
-                                            _photoPageController?.nextPage(
-                                              duration: const Duration(milliseconds: 300),
-                                              curve: Curves.easeInOut,
-                                            );
-                                          }
-                                        : null,
-                                    icon: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.5),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.chevron_right, color: Colors.white, size: 28),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: 8,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: List.generate(
-                                    widget.location.photos.length,
-                                    (index) => Container(
-                                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: _currentPhotoIndex == index
-                                            ? Colors.white
-                                            : Colors.white.withValues(alpha: 0.5),
+                              if (widget.location.photos.length > 1) ...[
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Center(
+                                    child: IconButton(
+                                      onPressed: _currentPhotoIndex > 0
+                                          ? () {
+                                              _photoPageController
+                                                  ?.previousPage(
+                                                    duration: const Duration(
+                                                      milliseconds: 300,
+                                                    ),
+                                                    curve: Curves.easeInOut,
+                                                  );
+                                            }
+                                          : null,
+                                      icon: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.chevron_left,
+                                          color: Colors.white,
+                                          size: 28,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Center(
+                                    child: IconButton(
+                                      onPressed:
+                                          _currentPhotoIndex <
+                                              widget.location.photos.length - 1
+                                          ? () {
+                                              _photoPageController?.nextPage(
+                                                duration: const Duration(
+                                                  milliseconds: 300,
+                                                ),
+                                                curve: Curves.easeInOut,
+                                              );
+                                            }
+                                          : null,
+                                      icon: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.chevron_right,
+                                          color: Colors.white,
+                                          size: 28,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 8,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      widget.location.photos.length,
+                                      (index) => Container(
+                                        margin: const EdgeInsets.symmetric(
+                                          horizontal: 3,
+                                        ),
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: _currentPhotoIndex == index
+                                              ? Colors.white
+                                              : Colors.white.withValues(
+                                                  alpha: 0.5,
+                                                ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: _isLoadingFavorite
+                          ? const CircularProgressIndicator()
+                          : IconButton(
+                              onPressed: _toggleFavorite,
+                              icon: Icon(
+                                _isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: _isFavorite ? Colors.red : Colors.white,
+                                size: 32,
+                              ),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.black.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
                     ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: _isLoadingFavorite
-                        ? const CircularProgressIndicator()
-                        : IconButton(
-                            onPressed: _toggleFavorite,
-                            icon: Icon(
-                              _isFavorite ? Icons.favorite : Icons.favorite_border,
-                              color: _isFavorite ? Colors.red : Colors.white,
-                              size: 32,
-                            ),
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.black.withValues(alpha: 0.5),
-                            ),
-                          ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -375,7 +451,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: widget.location.category.color.withValues(alpha: 0.2),
+                      color: widget.location.category.color.withValues(
+                        alpha: 0.2,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -402,6 +480,45 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              if (_isLoadingSubmitter)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: LinearProgressIndicator(minHeight: 2),
+                )
+              else if (_submitter != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: InkWell(
+                    onTap: () {
+                      print("redirecting to ${_submitter!.id}");
+                      Navigator.of(context).pop(); // close bottom sheet
+                      context.push('/profile/${_submitter!.id}');
+                    },
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 14,
+                          backgroundImage: _submitter!.avatarUrl != null
+                              ? NetworkImage(_submitter!.avatarUrl!)
+                              : null,
+                          child: _submitter!.avatarUrl == null
+                              ? Text(_submitter!.name[0].toUpperCase())
+                              : null,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Submitted by ${_submitter!.name}',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               const SizedBox(height: 16),
               Text(
                 widget.location.description,
@@ -446,9 +563,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
       children: [
         Text(
           'Ratings',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         if (_isLoadingRatings)
@@ -461,15 +578,15 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
               Text(
                 _averageRating.toStringAsFixed(1),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(width: 8),
               Text(
                 '(${_ratings.length} ${_ratings.length == 1 ? 'rating' : 'ratings'})',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),
@@ -503,9 +620,9 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
       children: [
         Text(
           'Comments',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Row(
@@ -560,7 +677,7 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
               final comment = _comments[index];
               final userName = comment.user?.name ?? 'Anonymous';
               final userAvatar = comment.user?.avatarUrl;
-              
+
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(
@@ -583,10 +700,7 @@ class _LocationDetailsSheetState extends State<LocationDetailsSheet> {
                     const SizedBox(height: 4),
                     Text(
                       _formatDate(comment.createdAt),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
                 ),
