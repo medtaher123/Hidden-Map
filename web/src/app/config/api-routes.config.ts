@@ -17,6 +17,7 @@ export const API_ROUTES = {
 
   locations: {
     base: `${API_BASE}/locations`,
+    search: `${API_BASE}/locations/search`,
   },
   files: {
     base: `${API_BASE}/files`,
