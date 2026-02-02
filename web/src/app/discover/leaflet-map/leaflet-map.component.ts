@@ -10,6 +10,7 @@ import {
   ViewChild,
   ElementRef,
   HostListener,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -32,6 +33,7 @@ interface Bounds {
   imports: [CommonModule, LocationDetailsComponent, FormsModule],
   templateUrl: './leaflet-map.component.html',
   styleUrl: './leaflet-map.component.css',
+  //changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LeafletMapComponent implements AfterViewInit {
   LOCATION_CATEGORIES = LOCATION_CATEGORIES;
@@ -42,10 +44,10 @@ export class LeafletMapComponent implements AfterViewInit {
   private map!: any;
   markers: any[] = [];
 
-  isDetailsOpen = false;
-  selectedLocation: Location | null = null;
-
   // Signals
+  selectedLocation = signal<Location | null>(null);
+  isDetailsOpen = computed(() => this.selectedLocation() !== null);
+
   private allLocations = signal<Location[]>([]);
   private isLoadingViewport = signal(false);
   private viewportBounds = signal<Bounds | null>(null);
@@ -316,15 +318,11 @@ export class LeafletMapComponent implements AfterViewInit {
   }
 
   openLocationDetails(location: Location) {
-    this.selectedLocation = location;
-    this.isDetailsOpen = true;
+    this.selectedLocation.set(location);
   }
 
   closeLocationDetails() {
-    this.isDetailsOpen = false;
-    setTimeout(() => {
-      this.selectedLocation = null;
-    }, 300);
+    this.selectedLocation.set(null);
   }
 
   onFavoriteChanged(event: { locationId: string; isFavorite: boolean }) {
@@ -343,9 +341,7 @@ export class LeafletMapComponent implements AfterViewInit {
 
   @HostListener('document:click', ['$event'])
   onClick(event: MouseEvent) {
-    console.log("cliiickkkk", this.searchContainer);
     if (this.searchContainer && !this.searchContainer.nativeElement.contains(event.target)) {
-      console.log("cliiickkkk outside")
       this.showDropdown.set(false);
     }
   }
@@ -364,7 +360,10 @@ export class LeafletMapComponent implements AfterViewInit {
         duration: 1.5,
       });
     }
-    this.openLocationDetails(location);
-    this.searchQuery.set(''); // Clear search
+
+    setTimeout(() => {
+      this.openLocationDetails(location);
+    }, 1500);
+    this.searchQuery.set(''); 
   }
 }

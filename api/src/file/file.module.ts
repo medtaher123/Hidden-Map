@@ -9,6 +9,6 @@ import { MediaFile } from './entities/file.entity';
   imports: [TypeOrmModule.forFeature([MediaFile])],
   controllers: [FileController],
   providers: [FileService],
-  exports: [FileService],
+  exports: [FileService, TypeOrmModule],
 })
 export class FileModule {}

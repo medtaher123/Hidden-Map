@@ -83,7 +83,6 @@ export class ImageUploaderComponent implements ControlValueAccessor {
   }
 
   private notifyForm() {
-    console.log(this.images())
     const ids = this.images().map((img) => img.id);
     this.onChange(ids); 
   }

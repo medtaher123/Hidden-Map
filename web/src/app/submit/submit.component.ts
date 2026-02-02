@@ -56,7 +56,6 @@ export class SubmitComponent {
 
   onSubmit() {
     this.form.markAllAsTouched();
-    console.log("001",this.form);
     if (this.form.invalid) {
       return;
     }
