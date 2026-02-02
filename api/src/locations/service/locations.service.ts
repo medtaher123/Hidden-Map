@@ -16,6 +16,8 @@ export class LocationsService {
     private readonly locationRepository: Repository<Location>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(MediaFile)
+    private readonly mediaFileRepository: Repository<MediaFile>,
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -70,13 +72,18 @@ export class LocationsService {
 
     const { photos, ...rest } = locationData;
 
-  const location = this.locationRepository.create({
-    ...rest,
-    submittedById: userId,
-    photos: photos ? photos.map(id => ({ id } as MediaFile)) : [],
-  });
+    let mediaFiles: MediaFile[] = [];
+    if (photos && photos.length > 0) {
+      mediaFiles = await this.mediaFileRepository.findByIds(photos);
+    }
 
-  const savedLocation = await this.locationRepository.save(location);
+    const location = this.locationRepository.create({
+      ...rest,
+      submittedById: userId,
+      photos: mediaFiles,
+    });
+
+    const savedLocation = await this.locationRepository.save(location);
     // Notify all admins about new location submission
     const admins = await this.userRepository.find({
       where: { role: UserRole.ADMIN },
@@ -98,14 +105,19 @@ export class LocationsService {
   }
 
   async update(id: string, updateLocationDto: UpdateLocationDto) {
-  const { photos, ...locationData } = updateLocationDto;
+    const { photos, ...locationData } = updateLocationDto;
 
-  return this.locationRepository.save({
-    id,
-    ...locationData,
-    photos: photos?.map((photoId) => ({ id: photoId }))
-  });
-}
+    let mediaFiles: MediaFile[] = [];
+    if (photos && photos.length > 0) {
+      mediaFiles = await this.mediaFileRepository.findByIds(photos);
+    }
+
+    return this.locationRepository.save({
+      id,
+      ...locationData,
+      photos: mediaFiles,
+    });
+  }
 
   async remove(id: string): Promise<void> {
     await this.locationRepository.softDelete(id);
