@@ -74,3 +74,8 @@ export const LOCATION_CATEGORIES: Record<LocationCategory, { label: string; colo
   nightlife: { label: 'Nightlife', color: '#FF7675', icon: '🌙' },
   other: { label: 'Other', color: '#95A5A6', icon: '📍' },
 };
+
+export const LOCATION_CATEGORY_OPTIONS = Object.entries(LOCATION_CATEGORIES).map(([key, value]) => ({
+  key,
+  value,
+}));
