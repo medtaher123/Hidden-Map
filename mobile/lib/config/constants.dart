@@ -1,8 +1,8 @@
 class ApiConstants {
   // Use 10.0.2.2 for Android emulator to access localhost
   //static const String baseUrl = 'http://10.0.2.2:3000';
-  //static const String baseUrl = 'http://localhost:3000';
-static const String baseUrl = 'http://192.168.1.101:3000';
+  static const String baseUrl = 'http://localhost:3000';
+  // static const String baseUrl = 'http://192.168.1.101:3000';
 
   static String resolveImageUrl(String url) {
     if (url.startsWith('http://') || url.startsWith('https://')) return url;

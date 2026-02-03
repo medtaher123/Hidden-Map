@@ -1,16 +1,29 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { Profile } from '../shared/models/profile.model';
 import { ActivatedRoute } from '@angular/router';
 import { ProfileService } from '../shared/services/profile.service';
 import { AuthService } from '../auth/services/auth.service';
 import { FollowersService } from '../shared/services/followers.service';
-import { Subject, takeUntil, catchError, of, forkJoin, combineLatest } from 'rxjs';
+import {
+  Subject,
+  takeUntil,
+  catchError,
+  of,
+  forkJoin,
+  combineLatest,
+} from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
@@ -19,6 +32,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private profileService = inject(ProfileService);
   private authService = inject(AuthService);
   private followerService = inject(FollowersService);
+  private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
 
   // Signals for reactive state
@@ -28,6 +42,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
   isFollowing = signal(false);
   isLoadingProfile = signal(false);
   isTogglingFollow = signal(false);
+  isEditMode = signal(false);
+  isSaving = signal(false);
+
+  editForm: FormGroup;
+
+  constructor() {
+    this.editForm = this.fb.group({
+      username: ['', Validators.required],
+      bio: [''],
+    });
+  }
 
   ngOnInit() {
     // Use combineLatest to react to both auth and route changes
@@ -181,4 +206,62 @@ export class ProfileComponent implements OnInit, OnDestroy {
       }
     });
 }
+
+  enterEditMode() {
+    const currentProfile = this.profile();
+    if (currentProfile && this.isOwnProfile()) {
+      this.editForm.patchValue({
+        username: currentProfile.username,
+        bio: currentProfile.bio || '',
+      });
+      this.isEditMode.set(true);
+    }
+  }
+
+  cancelEdit() {
+    this.isEditMode.set(false);
+    this.editForm.reset();
+  }
+
+  saveProfile() {
+    if (!this.editForm.valid || this.isSaving()) {
+      return;
+    }
+
+    const currentProfile = this.profile();
+    if (!currentProfile) {
+      return;
+    }
+
+    this.isSaving.set(true);
+
+    const updateData: any = {
+      name: this.editForm.value.username.trim(),
+    };
+
+    const bioText = this.editForm.value.bio?.trim() || '';
+    const currentBio = currentProfile.bio || '';
+    if (bioText !== currentBio) {
+      updateData.bio = bioText || null;
+    }
+
+    this.authService
+      .updateProfile(currentProfile.id, updateData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          const currentUserId = this.currentUserId();
+          if (currentUserId) {
+            this.loadProfileData(currentProfile.id, currentUserId);
+          }
+
+          this.isEditMode.set(false);
+          this.isSaving.set(false);
+        },
+        error: (error) => {
+          console.error('Error updating profile:', error);
+          this.isSaving.set(false);
+        },
+      });
+  }
 }

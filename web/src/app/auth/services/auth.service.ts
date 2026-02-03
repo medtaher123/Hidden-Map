@@ -31,6 +31,10 @@ export class AuthService {
     return this.http.post<UserProfileDto>(API_ROUTES.auth.profile, {});
   }
 
+  updateProfile(userId: string, updateData: any): Observable<any> {
+    return this.http.put(`${API_ROUTES.users.base}/${userId}`, updateData);
+  }
+
   fetchAndStoreProfile(): Observable<UserProfileDto> {
     return this.getProfile().pipe(
       tap((profile) => {
